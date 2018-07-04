@@ -12,4 +12,16 @@ public class ParkPlaceFee {
         this.secondHour = secondHour;
         this.nextHourMultiplicationTerm = nextHourMultiplicationTerm;
     }
+
+    public double getFirsHour() {
+        return firsHour;
+    }
+
+    public double getSecondHour() {
+        return secondHour;
+    }
+
+    public double getNextHourMultiplicationTerm() {
+        return nextHourMultiplicationTerm;
+    }
 }

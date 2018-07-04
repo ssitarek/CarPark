@@ -1,21 +1,25 @@
 package pl.ssitarek.carpark;
 
+import java.time.LocalDateTime;
+
 public class ParkPlace {
 
-    private int number;
+    private int placeNumber;
     private boolean isEmpty;
+    private LocalDateTime reservedFrom = null;
+    private String carRegistryNumber = "";
     private ParkPlaceType placeType;
-    private ParkPlaceFee parkPlaceFee;
+    private ParkPlaceFee parkPlaceFeeData;
 
 
-    public ParkPlace(int number, boolean isEmpty, ParkPlaceType placeType) {
-        this.number = number;
-        this.isEmpty = isEmpty;
+    public ParkPlace(int number, ParkPlaceType placeType) {
+        this.placeNumber = number;
+        this.isEmpty = true;
         this.placeType = placeType;
-        this.parkPlaceFee = createFee(placeType);
+        this.parkPlaceFeeData = createFeeData(placeType);
     }
 
-    private ParkPlaceFee createFee(ParkPlaceType placeType) {
+    private ParkPlaceFee createFeeData(ParkPlaceType placeType) {
 
         switch (placeType) {
             case REGULAR:
@@ -25,4 +29,45 @@ public class ParkPlace {
         }
         return null;
     }
+
+
+    public void doReservation(String inCarRegistryNumber, LocalDateTime inReservedFrom) {
+
+        isEmpty = false;
+        reservedFrom = inReservedFrom;
+        carRegistryNumber = inCarRegistryNumber;
+    }
+
+    public void unDoReservation() {
+
+        isEmpty = true;
+        reservedFrom = null;
+        carRegistryNumber = "";
+    }
+
+    public boolean getIsEmpty() {
+        return isEmpty;
+    }
+
+    public LocalDateTime getReservedFrom() {
+        return reservedFrom;
+    }
+
+    public int getPlaceNumber() {
+        return placeNumber;
+    }
+
+    public ParkPlaceType getPlaceType() {
+        return placeType;
+    }
+
+    public ParkPlaceFee getParkPlaceFeeData() {
+        return parkPlaceFeeData;
+    }
+
+    public String getCarRegistryNumber() {
+        return carRegistryNumber;
+    }
+
+
 }
