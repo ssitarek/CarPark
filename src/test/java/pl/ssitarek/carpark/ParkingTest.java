@@ -11,18 +11,18 @@ public class ParkingTest {
 
     public static final double DELTA_FEE = 0.01;
 
-    Parking parking;
+    Parking parkingForTests;
 
     @Before
     public void setUp() {
-        parking = new Parking("SomeCarParkName", "SomeCarParkAddress");
+        parkingForTests = new Parking("SomeCarParkName", "SomeCarParkAddress");
     }
 
 
     @Test
     public void startParkRegular() {
 
-        Ticket ticket = parking.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
+        Ticket ticket = parkingForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
 
         Assert.assertEquals(0, ticket.getTicketNumber());
         Assert.assertEquals("carRegular", ticket.getParkPlace().getCarRegistryNumber());
@@ -38,9 +38,19 @@ public class ParkingTest {
     }
 
     @Test
+    public void startParkRegularTwice() {
+
+        Ticket ticket1 = parkingForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
+        Ticket ticket2 = parkingForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
+
+        Assert.assertEquals("", ticket1.getTicketMessage());
+        Assert.assertEquals(Parking.ERROR_RESERVATION, ticket2.getTicketMessage());
+    }
+
+    @Test
     public void startParkVip() {
 
-        Ticket ticket = parking.startParkAndGetTicket("carVip", ParkPlaceType.VIP, LocalDateTime.now());
+        Ticket ticket = parkingForTests.startParkAndGetTicket("carVip", ParkPlaceType.VIP, LocalDateTime.now());
 
         Assert.assertEquals(0, ticket.getTicketNumber());
         Assert.assertEquals("carVip", ticket.getParkPlace().getCarRegistryNumber());
@@ -60,7 +70,7 @@ public class ParkingTest {
 
         Ticket ticket = new Ticket();
         for (int i = 0; i < 3; i++) {
-            ticket = parking.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(10));
+            ticket = parkingForTests.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(10));
         }
 
         Assert.assertEquals(2, ticket.getTicketNumber());
@@ -81,54 +91,54 @@ public class ParkingTest {
 
         Ticket ticket = new Ticket();
         for (int i = 0; i < 6; i++) {
-            ticket = parking.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now());
+            ticket = parkingForTests.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now());
         }
 
         Assert.assertEquals(0, ticket.getTicketNumber());
         Assert.assertNull(ticket.getParkPlace());
         Assert.assertNull(ticket.getReservedTo());
-        Assert.assertEquals("no empty places", ticket.getTicketMessage());
+        Assert.assertEquals(Parking.ERROR_NO_EMPLTY_PLACES, ticket.getTicketMessage());
     }
 
     @Test
     public void checkIfVehicleStartedParkingMeter() {
 
         for (int i = 0; i < 2; i++) {
-            parking.startParkAndGetTicket("carVip" + i, ParkPlaceType.VIP, LocalDateTime.now());
+            parkingForTests.startParkAndGetTicket("carVip" + i, ParkPlaceType.VIP, LocalDateTime.now());
         }
-        Assert.assertTrue(parking.checkIfVehicleStartedParking("carVip0"));
-        Assert.assertTrue(!parking.checkIfVehicleStartedParking("carReg0"));
+        Assert.assertTrue(parkingForTests.checkIfVehicleStartedParking("carVip0"));
+        Assert.assertTrue(!parkingForTests.checkIfVehicleStartedParking("carReg0"));
     }
 
     @Test
     public void payAndUnDoReservationTicketFound() throws InterruptedException {
 
-        parking.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
-        Ticket ticket = parking.payAndUnDoReservation(0);
-        Assert.assertTrue(ticket.getTicketMessage().equals("have a nice day"));
+        parkingForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
+        Ticket ticket = parkingForTests.stopPark(0);
+        Assert.assertTrue(ticket.getTicketMessage().equals(Parking.MESSAGE_FAREWELL));
     }
 
     @Test
     public void payAndUnDoReservationTicketNotFound() throws InterruptedException {
 
-        parking.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
-        Ticket ticket = parking.payAndUnDoReservation(10);
-        Assert.assertTrue(ticket.getTicketMessage().equals("ticket not found in our database"));
+        parkingForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
+        Ticket ticket = parkingForTests.stopPark(10);
+        Assert.assertTrue(ticket.getTicketMessage().equals(Parking.ERROR_TICKET_NOT_FOUND));
     }
 
     @Test
     public void calculateFeeForExistingTicket() {
 
-        parking.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(65));
-        double fee = parking.calculateFee(0, LocalDateTime.now());
+        parkingForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(65));
+        double fee = parkingForTests.calculateFee(0, LocalDateTime.now());
         Assert.assertEquals(3.0, fee, DELTA_FEE);
     }
 
     @Test
     public void calculateFeeForNonExistingTicket() {
 
-        parking.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(65));
-        double fee = parking.calculateFee(10, LocalDateTime.now());
+        parkingForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(65));
+        double fee = parkingForTests.calculateFee(10, LocalDateTime.now());
         Assert.assertEquals(0.0, fee, DELTA_FEE);
     }
 
@@ -136,12 +146,12 @@ public class ParkingTest {
     public void testGetDailyFee() {
 
         for (int i = 0; i < 4; i++) {
-            Ticket ticket = parking.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(125-30*i));
-            parking.payAndUnDoReservation(ticket.getTicketNumber());
+            Ticket ticket = parkingForTests.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(125 - 30 * i));
+            parkingForTests.stopPark(ticket.getTicketNumber());
         }
 
         String date = convertTimeToString(LocalDateTime.now());
-        double result = parking.getDailyFee(date);
+        double result = parkingForTests.getDailyFeeForSingleDate(date);
         Assert.assertEquals(13.0, result, DELTA_FEE);
     }
 
@@ -149,13 +159,13 @@ public class ParkingTest {
     public void testGetDailyFeeSingleCarParked() {
 
         for (int i = 0; i < 4; i++) {
-            Ticket ticket = parking.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(125-30*i));
-            parking.payAndUnDoReservation(ticket.getTicketNumber());
+            Ticket ticket = parkingForTests.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(125 - 30 * i));
+            parkingForTests.stopPark(ticket.getTicketNumber());
         }
-        Ticket ticket = parking.startParkAndGetTicket("carRegularNext", ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(150));
+        Ticket ticket = parkingForTests.startParkAndGetTicket("carRegularNext", ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(150));
 
         String date = convertTimeToString(LocalDateTime.now());
-        double result = parking.getDailyFee(date);
+        double result = parkingForTests.getDailyFeeForSingleDate(date);
         Assert.assertEquals(13.0, result, DELTA_FEE);
     }
 

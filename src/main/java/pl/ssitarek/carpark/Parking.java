@@ -1,5 +1,10 @@
 package pl.ssitarek.carpark;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,19 +12,65 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Component
 public class Parking {
 
+
+    public static final String ERROR_PAYMENT = "payment issue, please contact parking  administrator";
+    public static final String ERROR_NO_EMPLTY_PLACES = "no empty places";
+    public static final String ERROR_RESERVATION = "problems during reservation process";
+    public static final String ERROR_TICKET_NOT_FOUND = "ticket not found in our database";
+    public static final String ERROR_UNDO_RESERVATION = "payment has been registered but reservation has not been removed, please contact CarPark administrator";
+    public static final String MESSAGE_FAREWELL = "have a nice day";
+    public static final String MESSAGE_PAYMENT_OK = "payment OK";
+
+    /**
+     * these two are necessary for tests
+     */
     private static final int INITIAL_NUMBER_OF_REGULAR = 5;
     private static final int INITIAL_NUMBER_OF_VIP = 3;
 
+    @Value("${carPark.configuration.numberOfRegularParkPlaces}")
+    private int initialNumberOfRegular;
+
+    @Value("${carPark.configuration.numberOfVipParkPlaces}")
+    private int initialNumberOfVip;
+
+    @Value("${carPark.configuration.name}")
     private String name;
+
+    @Value("${carPark.configuration.address}")
     private String address;
     private int numberOfPlaces;
     private Map<ParkPlaceType, List<ParkPlace>> parkPlaceTypeListMap = new HashMap<>();
     private Map<Integer, Ticket> ticketsMapForSingleDay = new HashMap<>();
-    private Map<String, Double> dailyFee = new HashMap<>();
+    private Map<String, Double> dailyFeeMap = new HashMap<>();
+
+    public Parking() {
+
+    }
+
+    @PostConstruct
+    public void build() {
+
+        List<ParkPlace> regularList = generatePlaces(initialNumberOfRegular, ParkPlaceType.REGULAR);
+        parkPlaceTypeListMap.put(ParkPlaceType.REGULAR, regularList);
+
+        List<ParkPlace> vipList = generatePlaces(initialNumberOfVip, ParkPlaceType.VIP);
+        parkPlaceTypeListMap.put(ParkPlaceType.VIP, vipList);
+
+        numberOfPlaces = parkPlaceTypeListMap.get(ParkPlaceType.REGULAR).size() + parkPlaceTypeListMap.get(ParkPlaceType.VIP).size();
+
+        System.out.println("has been created " + name);
+    }
 
 
+    /**
+     * This constructor is necessary for tests
+     *
+     * @param name
+     * @param address
+     */
     public Parking(String name, String address) {
 
         this.name = name;
@@ -63,9 +114,9 @@ public class Parking {
      * @param date
      * @return
      */
-    public double getDailyFee(String date) {
+    public double getDailyFeeForSingleDate(String date) {
 
-        return Optional.ofNullable(dailyFee.get(date)).orElse(0.0);
+        return Optional.ofNullable(dailyFeeMap.get(date)).orElse(0.0);
 
     }
 
@@ -91,12 +142,12 @@ public class Parking {
      * @param ticketNumber
      * @return
      */
-    public Ticket payAndUnDoReservation(int ticketNumber) {
+    public Ticket stopPark(int ticketNumber) {
 
         Ticket ticket = ticketsMapForSingleDay.get(ticketNumber);
         if (ticket == null) {
             ticket = new Ticket();
-            ticket.updateTicketData(null, 0, "ticket not found in our database");
+            ticket.updateTicketData(null, 0, ERROR_TICKET_NOT_FOUND);
             return ticket;
         }
 
@@ -104,24 +155,24 @@ public class Parking {
         double fee = calculateFee(ticketNumber, currentDateTime);
         boolean isPaymentOk = doPayment(ticket.getTicketFee());
         if (isPaymentOk == false) {
-            ticket.updateTicketData(currentDateTime, fee, "payment issue, please contact " + name + " administrator");
+            ticket.updateTicketData(currentDateTime, fee, ERROR_PAYMENT);
         }
-        ticket.updateTicketData(currentDateTime, fee, "payment OK");
+        ticket.updateTicketData(currentDateTime, fee, MESSAGE_PAYMENT_OK);
 
         //prepare to calculate dailyFee
         String workingDay = convertTimeToString(ticket.getReservedTo());
-        if (dailyFee.get(workingDay) == null) {
-            dailyFee.put(workingDay, 0.0);
+        if (dailyFeeMap.get(workingDay) == null) {
+            dailyFeeMap.put(workingDay, 0.0);
         }
-        Double val = dailyFee.get(workingDay);
+        Double val = dailyFeeMap.get(workingDay);
         val += ticket.getTicketFee();
-        dailyFee.put(workingDay, val);
+        dailyFeeMap.put(workingDay, val);
 
         if (!unDoReserveParkPlace(ticket.getParkPlace())) {
-            ticket.updateTicketData(currentDateTime, fee, "payment has been registered but reservation has not been removed, please contact CarPark administrator");
+            ticket.updateTicketData(currentDateTime, fee, ERROR_UNDO_RESERVATION);
         }
 
-        ticket.updateTicketData(currentDateTime, fee, "have a nice day");
+        ticket.updateTicketData(currentDateTime, fee, MESSAGE_FAREWELL);
         return ticket;
     }
 
@@ -164,14 +215,14 @@ public class Parking {
         int emptyPlaceNumber = getEmptyPlaceNumber(parkPlaceType);
         if (emptyPlaceNumber == -1) {
             Ticket ticket = new Ticket();
-            ticket.generateEmptyTicketWithMessage("no empty places");
+            ticket.generateEmptyTicketWithMessage(ERROR_NO_EMPLTY_PLACES);
             return ticket;
         }
 
         boolean isReservationOk = doReserveParkPlace(parkPlaceType, emptyPlaceNumber, carRegistrationNumber, localDateTime);
         if (!isReservationOk) {
             Ticket ticket = new Ticket();
-            ticket.generateEmptyTicketWithMessage("problems during reservation process");
+            ticket.generateEmptyTicketWithMessage(ERROR_RESERVATION);
             return ticket;
         }
 
@@ -198,8 +249,12 @@ public class Parking {
 
     private boolean doReserveParkPlace(ParkPlaceType parkPlaceType, int emptyPlaceNumber, String carRegistryNumber, LocalDateTime localDateTime) {
 
+        if (checkIfVehicleStartedParking(carRegistryNumber)) {
+            return false;
+        }
         List<ParkPlace> parkPlaceList = parkPlaceTypeListMap.get(parkPlaceType);
         ParkPlace singlePlace = parkPlaceList.get(emptyPlaceNumber);
+
         singlePlace.doReservation(carRegistryNumber, localDateTime);
         return true;
     }

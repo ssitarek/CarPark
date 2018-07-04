@@ -2,6 +2,7 @@ package pl.ssitarek.carpark;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public class Ticket {
 
@@ -42,12 +43,17 @@ public class Ticket {
 
     @Override
     public String toString() {
+
+        ParkPlace parkPlaceForString= Optional
+                .ofNullable(parkPlace)
+                .orElse(new ParkPlace(0, ParkPlaceType.REGULAR));
+
         return "Ticket{" +
                 "ticketNumber=" + ticketNumber +
-                ", carRegistryNumber=" + parkPlace.getCarRegistryNumber() +
-                ", parkPlaceType=" + parkPlace.getPlaceType() +
-                ", parkPlaceNumber=" + parkPlace.getPlaceNumber() +
-                ", startDateTime=" + parkPlace.getReservedFrom() +
+                ", carRegistryNumber=" + parkPlaceForString.getCarRegistryNumber() +
+                ", parkPlaceType=" + parkPlaceForString.getPlaceType() +
+                ", parkPlaceNumber=" + parkPlaceForString.getPlaceNumber() +
+                ", startDateTime=" + parkPlaceForString.getReservedFrom() +
                 ", stopDateTime=" + reservedTo +
                 ", ticketFee=" + ticketFee +
                 ", ticketMessage=" + ticketMessage +
