@@ -4,7 +4,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
@@ -21,9 +20,6 @@ public class ParkingImplTestIntegr {
 
     @Autowired
     ParkingImpl parkingImplForTests;
-
-    @Mock
-    private PaymentImpl payment;// =mock(PaymentImpl.class);
 
     @Before
     public void SetUp() {
@@ -108,7 +104,7 @@ public class ParkingImplTestIntegr {
         Assert.assertEquals(0, ticket.getTicketNumber());
         Assert.assertNull(ticket.getParkPlace());
         Assert.assertNull(ticket.getReservedTo());
-        Assert.assertEquals(ParkingImpl.ErrorsAndMessages.ERROR_NO_EMPLTY_PLACES, ticket.getTicketMessage());
+        Assert.assertEquals(ParkingImpl.ErrorsAndMessages.ERROR_NO_EMPTY_PLACES, ticket.getTicketMessage());
     }
 
     @Test

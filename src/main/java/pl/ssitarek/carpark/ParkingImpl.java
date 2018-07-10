@@ -2,17 +2,15 @@ package pl.ssitarek.carpark;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import pl.ssitarek.carpark.config.CarParkParameter;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
-public class ParkingImpl implements Parking{
+public class ParkingImpl implements Parking {
 
     @Value("${carPark.configuration.numberOfRegularParkPlaces}")
     private int initialNumberOfRegular;
@@ -26,13 +24,7 @@ public class ParkingImpl implements Parking{
     @Value("${carPark.configuration.address}")
     private String address;
 
-    private int numberOfPlaces;
-    private Map<ParkPlaceType, List<ParkPlace>> parkPlaceTypeListMap;
-    private int lastTicketNumber;
-
-    private Map<Integer, Ticket> currentTicketsMap;
-    private Map<String, BigDecimal> dailyFeeMap;
-    private PaymentImpl payment;
+    private CarParkParameter carParkParameter;
 
     public ParkingImpl() {
 
@@ -41,32 +33,8 @@ public class ParkingImpl implements Parking{
     @PostConstruct
     public void build() {
 
-        parkPlaceTypeListMap = new HashMap<>();
-
-        List<ParkPlace> regularList = generatePlaces(initialNumberOfRegular, ParkPlaceType.REGULAR);
-        parkPlaceTypeListMap.put(ParkPlaceType.REGULAR, regularList);
-
-        List<ParkPlace> vipList = generatePlaces(initialNumberOfVip, ParkPlaceType.VIP);
-        parkPlaceTypeListMap.put(ParkPlaceType.VIP, vipList);
-
-        numberOfPlaces = parkPlaceTypeListMap.get(ParkPlaceType.REGULAR).size() + parkPlaceTypeListMap.get(ParkPlaceType.VIP).size();
-        lastTicketNumber=-1;
-
-        currentTicketsMap = new HashMap<>();
-        dailyFeeMap = new HashMap<>();
-
-        payment = new PaymentImpl();
-
+        carParkParameter = new CarParkParameter(initialNumberOfRegular, initialNumberOfVip);
         System.out.println("has been created " + name);
-    }
-
-    private List<ParkPlace> generatePlaces(int numberOfPlaces, ParkPlaceType parkPlaceType) {
-
-        List<ParkPlace> parkPlaces = new ArrayList<>();
-        for (int i = 0; i < numberOfPlaces; i++) {
-            parkPlaces.add(new ParkPlace(parkPlaceType.getValue() + i, parkPlaceType));
-        }
-        return parkPlaces;
     }
 
     @Override
@@ -74,9 +42,9 @@ public class ParkingImpl implements Parking{
         return "Parking{" +
                 "name='" + name + '\'' +
                 ", address='" + address + '\'' +
-                ", numberOfPlaces=" + numberOfPlaces +
-                ", numberOfRegular=" + parkPlaceTypeListMap.get(ParkPlaceType.REGULAR).size() +
-                ", numberOfVip=" + parkPlaceTypeListMap.get(ParkPlaceType.VIP).size() +
+                ", numberOfPlaces=" + carParkParameter.getNumberOfPlaces() +
+                ", numberOfRegular=" + carParkParameter.getParkPlaceTypeListMap().get(ParkPlaceType.REGULAR).size() +
+                ", numberOfVip=" + carParkParameter.getParkPlaceTypeListMap().get(ParkPlaceType.VIP).size() +
                 '}';
     }
 
@@ -90,7 +58,7 @@ public class ParkingImpl implements Parking{
     @Override
     public BigDecimal getDailyFeeForSingleDate(String date) {
 
-        return dailyFeeMap.get(date);//Optional.ofNullable(dailyFeeMap.get(date)).orElse(new BigDecimal(0.0));
+        return carParkParameter.getDailyFeeMap().get(date);//Optional.ofNullable(dailyFeeMap.get(date)).orElse(new BigDecimal(0.0));
 
     }
 
@@ -103,9 +71,9 @@ public class ParkingImpl implements Parking{
     @Override
     public BigDecimal calculateFee(int ticketNumber, LocalDateTime currentDateTime) {
 
-        Ticket ticket = currentTicketsMap.get(ticketNumber);
+        Ticket ticket = carParkParameter.getCurrentTicketsMap().get(ticketNumber);
         if (ticket == null) {
-            return null;//return new BigDecimal(0.0)
+            return null;
         }
         return ticket.calculateTicketFee(currentDateTime);
     }
@@ -120,7 +88,7 @@ public class ParkingImpl implements Parking{
     @Override
     public Ticket stopPark(int ticketNumber) {
 
-        Ticket ticket = currentTicketsMap.get(ticketNumber);
+        Ticket ticket = carParkParameter.getCurrentTicketsMap().get(ticketNumber);
         if (ticket == null) {
             ticket = new Ticket();
             ticket.updateTicketData(null, null, ErrorsAndMessages.ERROR_TICKET_NOT_FOUND);
@@ -131,32 +99,32 @@ public class ParkingImpl implements Parking{
         BigDecimal fee = calculateFee(ticketNumber, currentDateTime);
         if (fee == null) {
             ticket = new Ticket();
-            ticket.updateTicketData(null, null, "fee == zero ale czemu??");
+            ticket.updateTicketData(null, null, ErrorsAndMessages.ERROR_FEE);
             return ticket;
         }
 
-        payment.doPayment(fee, true);
-        boolean aa = payment.checkPaymentStatus();
-        if (payment.checkPaymentStatus() == false) {
+        carParkParameter.getPayment().doPayment(fee, true);
+        boolean isPaymentOk = carParkParameter.getPayment().checkPaymentStatus();
+        if (isPaymentOk == false) {
             ticket.updateTicketData(currentDateTime, fee, ErrorsAndMessages.ERROR_PAYMENT);
         }
         ticket.updateTicketData(currentDateTime, fee, ErrorsAndMessages.MESSAGE_PAYMENT_OK);
 
         //prepare to calculate dailyFee
         String workingDay = convertTimeToString(ticket.getReservedTo());
-        if (dailyFeeMap.get(workingDay) == null) {
-            dailyFeeMap.put(workingDay, new BigDecimal(0.0));
+        if (carParkParameter.getDailyFeeMap().get(workingDay) == null) {
+            carParkParameter.getDailyFeeMap().put(workingDay, new BigDecimal(0.0));
         }
-        BigDecimal val = dailyFeeMap.get(workingDay);
+        BigDecimal val = carParkParameter.getDailyFeeMap().get(workingDay);
         val = val.add(ticket.getTicketFee());
-        dailyFeeMap.put(workingDay, val);
+        carParkParameter.getDailyFeeMap().put(workingDay, val);
 
         if (!unDoReserveParkPlace(ticket.getParkPlace())) {
             ticket.updateTicketData(currentDateTime, fee, ErrorsAndMessages.ERROR_UNDO_RESERVATION);
         }
 
         ticket.updateTicketData(currentDateTime, fee, ErrorsAndMessages.MESSAGE_FAREWELL);
-        currentTicketsMap.remove(ticket.getTicketNumber());
+        carParkParameter.getCurrentTicketsMap().remove(ticket.getTicketNumber());
         return ticket;
     }
 
@@ -176,8 +144,8 @@ public class ParkingImpl implements Parking{
     public boolean checkIfVehicleStartedParking(String carRegistryNumber) {
 
         ParkPlaceType[] parkPlaceTypes = ParkPlaceType.values();
-        for (int i = 0; i < parkPlaceTypeListMap.size(); i++) {
-            List<ParkPlace> tmpList = parkPlaceTypeListMap.get(parkPlaceTypes[i]);
+        for (int i = 0; i < carParkParameter.getParkPlaceTypeListMap().size(); i++) {
+            List<ParkPlace> tmpList = carParkParameter.getParkPlaceTypeListMap().get(parkPlaceTypes[i]);
             for (int j = 0; j < tmpList.size(); j++) {
                 if (carRegistryNumber.equals(tmpList.get(j).getCarRegistryNumber())) {
                     return true;
@@ -201,7 +169,7 @@ public class ParkingImpl implements Parking{
         int emptyPlaceNumber = getEmptyPlaceNumber(parkPlaceType);
         if (emptyPlaceNumber == -1) {
             Ticket ticket = new Ticket();
-            ticket.generateEmptyTicketWithMessage(ErrorsAndMessages.ERROR_NO_EMPLTY_PLACES);
+            ticket.generateEmptyTicketWithMessage(ErrorsAndMessages.ERROR_NO_EMPTY_PLACES);
             return ticket;
         }
 
@@ -213,9 +181,9 @@ public class ParkingImpl implements Parking{
         }
 
         int ticketNumber = generateTicketNumber();
-        Ticket ticket = generateTicket(ticketNumber, parkPlaceTypeListMap.get(parkPlaceType).get(emptyPlaceNumber));
-        currentTicketsMap.put(ticketNumber, ticket);
-        lastTicketNumber++;
+        Ticket ticket = generateTicket(ticketNumber, carParkParameter.getParkPlaceTypeListMap().get(parkPlaceType).get(emptyPlaceNumber));
+        carParkParameter.getCurrentTicketsMap().put(ticketNumber, ticket);
+        carParkParameter.setLastTicketNumber(ticketNumber);
         return ticket;
     }
 
@@ -232,7 +200,7 @@ public class ParkingImpl implements Parking{
         if (checkIfVehicleStartedParking(carRegistryNumber)) {
             return false;
         }
-        List<ParkPlace> parkPlaceList = parkPlaceTypeListMap.get(parkPlaceType);
+        List<ParkPlace> parkPlaceList = carParkParameter.getParkPlaceTypeListMap().get(parkPlaceType);
         ParkPlace singlePlace = parkPlaceList.get(emptyPlaceNumber);
 
         singlePlace.doReservation(carRegistryNumber, localDateTime);
@@ -247,13 +215,13 @@ public class ParkingImpl implements Parking{
 
     private int generateTicketNumber() {
 
-        int ticketNumber = lastTicketNumber+1;
+        int ticketNumber = carParkParameter.getLastTicketNumber() + 1;
         return ticketNumber;
     }
 
     private int getEmptyPlaceNumber(ParkPlaceType parkPlaceType) {
 
-        List<ParkPlace> parkPlaceList = parkPlaceTypeListMap.get(parkPlaceType);
+        List<ParkPlace> parkPlaceList = carParkParameter.getParkPlaceTypeListMap().get(parkPlaceType);
         for (int i = 0; i < parkPlaceList.size(); i++) {
             if (parkPlaceList.get(i).getIsEmpty()) {
                 return i;
@@ -271,15 +239,16 @@ public class ParkingImpl implements Parking{
         return stringBuilder.toString();
     }
 
-    static class ErrorsAndMessages {
+    public static class ErrorsAndMessages {
 
-        static String ERROR_PAYMENT = "payment issue, please contact parking  administrator";
-        static String ERROR_NO_EMPLTY_PLACES = "no empty places";
-        static String ERROR_RESERVATION = "problems during reservation process";
-        static String ERROR_TICKET_NOT_FOUND = "ticket not found in our database";
-        static String ERROR_UNDO_RESERVATION = "payment has been registered but reservation has not been removed, please contact CarPark administrator";
-        static String MESSAGE_FAREWELL = "have a nice day";
-        static String MESSAGE_PAYMENT_OK = "payment OK";
+        public static final String ERROR_PAYMENT = "!!! PAYMENT ISSUE, PLEASE CONTACT PARKING ADMINISTRATOR !!!";
+        public static final String ERROR_FEE = "!!! ERROR DURING THE FEE CALCULATION !!!";
+        public static final String ERROR_NO_EMPTY_PLACES = "!!! NO EMPTY PLACES !!!";
+        public static final String ERROR_RESERVATION = "!!! PROBLEMS DURING RESERVATION PROCESS, WRONG PARK PLACE TYPE OR THE CAR IS ALREDY PARKED !!!";
+        public static final String ERROR_TICKET_NOT_FOUND = "!!! TICKET NOT FOUND IN OUR DATABASE !!!";
+        public static final String ERROR_UNDO_RESERVATION = "!!! PAYMENT HAS BEEN REGISTERED BUT RESERVATIONT HAS NOT BEEN REMOVED , PLEASE CONTACT PARKING ADMINISTRATOR !!!";
+        public static final String MESSAGE_FAREWELL = "!!! HAVE A NICE DAY !!!";
+        public static final String MESSAGE_PAYMENT_OK = "!!! PAYMENT OK !!!";
     }
 }
 

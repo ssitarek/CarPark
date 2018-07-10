@@ -40,25 +40,23 @@ public class CarParkController {
      *
      * @param carRegistrationNumber
      * @param parkPlaceTypeStr
-     * @return query example: http://localhost:8080/carpark/startPark?number=AB 12345
+     * @return ticket info
+     * query example: http://localhost:8080/carpark/startPark?number=AB 12345&type=Regular
      * query example: http://localhost:8080/carpark/startPark?number=AB 12345&type=Vip
      */
     @RequestMapping("/startPark")
     public String startParkTheCar(
             @RequestParam("number") String carRegistrationNumber,
-            @RequestParam(value = "type", required = false, defaultValue = "reg") String parkPlaceTypeStr
+            @RequestParam(value = "type", required = false, defaultValue = "regular") String parkPlaceTypeStr
     ) {
 
-        //it is necessary to change this part of code in cas of new parkPlace type
         ParkPlaceType parkPlaceType;
         try {
             parkPlaceType = ParkPlaceType.valueOf(parkPlaceTypeStr.toUpperCase());
-//        ParkPlaceType parkPlaceType = ParkPlaceType.REGULAR;
-//        if ("vip".equals(parkPlaceTypeStr.toLowerCase())) {
-//            parkPlaceType = ParkPlaceType.VIP;
-//        }
         } catch (IllegalArgumentException ex) {
-            return "wron";
+            Ticket ticket = new Ticket();
+            ticket.updateTicketData(null, null, ParkingImpl.ErrorsAndMessages.ERROR_RESERVATION);
+            return ticket.toString();
         }
         Ticket ticket = parkingImpl.startParkAndGetTicket(carRegistrationNumber.toUpperCase(), parkPlaceType, LocalDateTime.now());
         return ticket.toString();
@@ -70,7 +68,8 @@ public class CarParkController {
      * As a parking operator, I want to check if the vehicle has started the parking meter.
      *
      * @param carRegistrationNumber
-     * @return query example: http://localhost:8080/carpark/checkIfStarted?number=AB 12345
+     * @return true in case of started and false otherwise
+     * query example: http://localhost:8080/carpark/checkIfStarted?number=AB 12345
      */
 
     @RequestMapping("/checkIfStarted")
@@ -86,7 +85,8 @@ public class CarParkController {
      * As a driver, I want to stop the parking meter, so that I pay only for the actual parking time
      *
      * @param ticketNumber
-     * @return query example: http://localhost:8080/carpark/stopPark?ticket=0
+     * @return ticket info
+     * query example: http://localhost:8080/carpark/stopPark?ticket=0
      */
 
     @RequestMapping("/stopPark")
@@ -103,7 +103,8 @@ public class CarParkController {
      * I want to know how much I have to pay for parking.
      *
      * @param ticketNumber
-     * @return query example: http://localhost:8080/carpark/getTicketFee?number=0
+     * @return ticket info
+     * query example: http://localhost:8080/carpark/getTicketFee?number=0
      * query example: http://localhost:8080/carpark/getTicketFee?number=2
      */
     @RequestMapping("/getTicketFee")
