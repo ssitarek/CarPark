@@ -1,11 +1,14 @@
 package pl.ssitarek.carpark;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ParkPlaceTest {
 
@@ -22,41 +25,41 @@ public class ParkPlaceTest {
     @Test
     public void isParkPlaceRegularEmpty() {
 
-        Assert.assertTrue(parkPlaceRegular.getIsEmpty());
-        Assert.assertTrue("".equals(parkPlaceRegular.getCarRegistryNumber()));
-        Assert.assertNull(parkPlaceRegular.getReservedFrom());
+        assertTrue(parkPlaceRegular.getIsEmpty());
+        assertTrue("".equals(parkPlaceRegular.getCarRegistryNumber()));
+        assertNull(parkPlaceRegular.getReservedFrom());
     }
 
     @Test
     public void isParkPlaceVipEmpty() {
 
-        Assert.assertTrue(parkPlaceVip.getIsEmpty());
-        Assert.assertTrue("".equals(parkPlaceVip.getCarRegistryNumber()));
-        Assert.assertNull(parkPlaceVip.getReservedFrom());
+        assertTrue(parkPlaceVip.getIsEmpty());
+        assertTrue("".equals(parkPlaceVip.getCarRegistryNumber()));
+        assertNull(parkPlaceVip.getReservedFrom());
     }
 
     @Test
     public void regularReservation() {
 
         parkPlaceRegular.doReservation("testCarRegular", LocalDateTime.now().minusMinutes(65));
-        Assert.assertTrue(!parkPlaceRegular.getIsEmpty());
-        Assert.assertTrue("testCarRegular".equals(parkPlaceRegular.getCarRegistryNumber()));
+        assertTrue(!parkPlaceRegular.getIsEmpty());
+        assertTrue("testCarRegular".equals(parkPlaceRegular.getCarRegistryNumber()));
 
         Duration duration = Duration.between(LocalDateTime.now(), parkPlaceRegular.getReservedFrom());
         long occupancyTime = Math.abs(duration.toMinutes());
-        Assert.assertEquals(65, occupancyTime);
+        assertEquals(65, occupancyTime);
     }
 
     @Test
     public void vipReservation() {
 
         parkPlaceVip.doReservation("testCarVip", LocalDateTime.now().minusMinutes(65));
-        Assert.assertTrue(!parkPlaceVip.getIsEmpty());
-        Assert.assertTrue("testCarVip".equals(parkPlaceVip.getCarRegistryNumber()));
+        assertTrue(!parkPlaceVip.getIsEmpty());
+        assertTrue("testCarVip".equals(parkPlaceVip.getCarRegistryNumber()));
 
         Duration duration = Duration.between(LocalDateTime.now(), parkPlaceVip.getReservedFrom());
         long occupancyTime = Math.abs(duration.toMinutes());
-        Assert.assertEquals(65, occupancyTime);
+        assertEquals(65, occupancyTime);
     }
 
     @Test
@@ -64,9 +67,9 @@ public class ParkPlaceTest {
 
         parkPlaceRegular.doReservation("testCarRegular", LocalDateTime.now().minusMinutes(65));
         parkPlaceRegular.unDoReservation();
-        Assert.assertTrue(parkPlaceRegular.getIsEmpty());
-        Assert.assertTrue("".equals(parkPlaceRegular.getCarRegistryNumber()));
-        Assert.assertNull(parkPlaceRegular.getReservedFrom());
+        assertTrue(parkPlaceRegular.getIsEmpty());
+        assertTrue("".equals(parkPlaceRegular.getCarRegistryNumber()));
+        assertNull(parkPlaceRegular.getReservedFrom());
     }
 
     @Test
@@ -74,9 +77,9 @@ public class ParkPlaceTest {
 
         parkPlaceVip.doReservation("testCarVip", LocalDateTime.now().minusMinutes(65));
         parkPlaceVip.unDoReservation();
-        Assert.assertTrue(parkPlaceVip.getIsEmpty());
-        Assert.assertTrue("".equals(parkPlaceVip.getCarRegistryNumber()));
-        Assert.assertNull(parkPlaceVip.getReservedFrom());
+        assertTrue(parkPlaceVip.getIsEmpty());
+        assertTrue("".equals(parkPlaceVip.getCarRegistryNumber()));
+        assertNull(parkPlaceVip.getReservedFrom());
     }
 
 }

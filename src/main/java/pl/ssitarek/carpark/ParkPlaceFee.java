@@ -1,23 +1,25 @@
 package pl.ssitarek.carpark;
 
+import java.math.BigDecimal;
+
 public class ParkPlaceFee {
 
-    private double firsHour;
-    private double secondHour;
+    private BigDecimal firsHour;
+    private BigDecimal secondHour;
     private double nextHourMultiplicationTerm;
 
 
-    public ParkPlaceFee(double firsHour, double secondHour, double nextHourMultiplicationTerm) {
+    public ParkPlaceFee(BigDecimal firsHour, BigDecimal secondHour, double nextHourMultiplicationTerm) {
         this.firsHour = firsHour;
         this.secondHour = secondHour;
         this.nextHourMultiplicationTerm = nextHourMultiplicationTerm;
     }
 
-    public double getFirsHour() {
+    public BigDecimal getFirsHour() {
         return firsHour;
     }
 
-    public double getSecondHour() {
+    public BigDecimal getSecondHour() {
         return secondHour;
     }
 

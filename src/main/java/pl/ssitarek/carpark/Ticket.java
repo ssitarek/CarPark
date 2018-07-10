@@ -1,5 +1,6 @@
 package pl.ssitarek.carpark;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -9,7 +10,7 @@ public class Ticket {
     private int ticketNumber;
     private ParkPlace parkPlace;
     private LocalDateTime reservedTo;
-    private double ticketFee;
+    private BigDecimal ticketFee;
     private String ticketMessage;
 
     public Ticket() {
@@ -21,7 +22,7 @@ public class Ticket {
         this.ticketNumber = ticketNumber;
         this.parkPlace = parkPlace;
         reservedTo = null;
-        ticketFee = 0.0;
+        ticketFee = null;
         ticketMessage = "";
     }
 
@@ -30,11 +31,11 @@ public class Ticket {
         ticketNumber = 0;
         parkPlace = null;
         reservedTo = null;
-        ticketFee = 0.0;
+        ticketFee = null;
         ticketMessage = message;
     }
 
-    public void updateTicketData(LocalDateTime localDateTime, double fee, String message) {
+    public void updateTicketData(LocalDateTime localDateTime, BigDecimal fee, String message) {
 
         reservedTo = localDateTime;
         ticketFee = fee;
@@ -44,9 +45,12 @@ public class Ticket {
     @Override
     public String toString() {
 
-        ParkPlace parkPlaceForString= Optional
+        ParkPlace parkPlaceForString = Optional
                 .ofNullable(parkPlace)
                 .orElse(new ParkPlace(0, ParkPlaceType.REGULAR));
+        BigDecimal ticketFeeForString = Optional
+                .ofNullable(ticketFee)
+                .orElse(new BigDecimal(0.0));
 
         return "Ticket{" +
                 "ticketNumber=" + ticketNumber +
@@ -55,32 +59,40 @@ public class Ticket {
                 ", parkPlaceNumber=" + parkPlaceForString.getPlaceNumber() +
                 ", startDateTime=" + parkPlaceForString.getReservedFrom() +
                 ", stopDateTime=" + reservedTo +
-                ", ticketFee=" + ticketFee +
+                ", ticketFee=" + ticketFeeForString.toString() +
                 ", ticketMessage=" + ticketMessage +
                 '}';
     }
 
-    public double calculateTicketFee(LocalDateTime localDateTime) {
+    public BigDecimal calculateTicketFee(LocalDateTime localDateTime) {
+
+        if ((localDateTime == null)||(parkPlace == null)) {
+            return null;
+        }
+        if (parkPlace.getReservedFrom() == null) {
+            return null;
+        }
 
         Duration duration = Duration.between(localDateTime, parkPlace.getReservedFrom());
         long occupancyTime = Math.abs(duration.toHours());
-        double[] priceTable = generatePriceListTable((int)occupancyTime);
+        BigDecimal[] priceTable = generatePriceListTable((int)occupancyTime);
 
-        double fee = 0;
-        for (double price : priceTable) {
-            fee += price;
+        BigDecimal fee = new BigDecimal(0.0);
+        for (BigDecimal price : priceTable) {
+            fee = fee.add(price);
         }
-        return Math.round(fee * 100.0) / 100.0;
+        return fee;
     }
 
-    private double[] generatePriceListTable(int numberOfHours) {
+    private BigDecimal[] generatePriceListTable(int numberOfHours) {
 
-        double[] priceTable = new double[numberOfHours + 1];
+        BigDecimal[] priceTable = new BigDecimal[numberOfHours + 1];
         priceTable[0] = parkPlace.getParkPlaceFeeData().getFirsHour();
 
-        double baseFee = parkPlace.getParkPlaceFeeData().getSecondHour();
+        BigDecimal baseFee = parkPlace.getParkPlaceFeeData().getSecondHour();
         for (int i = 1; i < priceTable.length; i++) {
-            priceTable[i] = baseFee * Math.pow(parkPlace.getParkPlaceFeeData().getNextHourMultiplicationTerm(), i - 1);
+            double coefficient = Math.pow(parkPlace.getParkPlaceFeeData().getNextHourMultiplicationTerm(), i - 1);
+            priceTable[i] = baseFee.multiply(new BigDecimal(coefficient));
         }
         return priceTable;
     }
@@ -89,7 +101,7 @@ public class Ticket {
         return ticketNumber;
     }
 
-    public double getTicketFee() {
+    public BigDecimal getTicketFee() {
         return ticketFee;
     }
 

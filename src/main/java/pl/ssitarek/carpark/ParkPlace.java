@@ -1,5 +1,6 @@
 package pl.ssitarek.carpark;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class ParkPlace {
@@ -23,9 +24,9 @@ public class ParkPlace {
 
         switch (placeType) {
             case REGULAR:
-                return new ParkPlaceFee(1.0, 2.0, 1.5);
+                return new ParkPlaceFee(new BigDecimal(100.0), new BigDecimal(200.0), 1.5);
             case VIP:
-                return new ParkPlaceFee(0.0, 2.0, 1.2);
+                return new ParkPlaceFee(new BigDecimal(0.0), new BigDecimal(200.0), 1.2);
         }
         return null;
     }

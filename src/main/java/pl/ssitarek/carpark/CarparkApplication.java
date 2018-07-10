@@ -10,7 +10,5 @@ public class CarparkApplication {
 
         SpringApplication.run(CarparkApplication.class, args);
 
-//        Parking parking = new Parking("SomeCarParkName", "SomeCarParkAddress");
-//        System.out.println("Parking application has just started:\n"+parking.toString());
     }
 }

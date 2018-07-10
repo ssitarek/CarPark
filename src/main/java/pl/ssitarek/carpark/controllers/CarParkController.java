@@ -2,36 +2,34 @@ package pl.ssitarek.carpark.controllers;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import pl.ssitarek.carpark.ParkPlace;
 import pl.ssitarek.carpark.ParkPlaceType;
-import pl.ssitarek.carpark.Parking;
+import pl.ssitarek.carpark.ParkingImpl;
 import pl.ssitarek.carpark.Ticket;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/carpark")
 public class CarParkController {
 
     @Autowired
-    Parking parking;
+    ParkingImpl parkingImpl;
 
     @RequestMapping("")
     public String displayInfo() {
 
-        return "Welcome to our CarPark.<pre>Basic information: " + parking.toString() + "</pre>";
+        return "Welcome to our CarPark.<pre>Basic information: " + parkingImpl.toString() + "</pre>";
     }
 
     @RequestMapping("/hello")
     public String hello() {
 
-        return "health check website of: " + parking.toString();
+        return "health check website of: " + parkingImpl.toString();
     }
 
 
@@ -42,9 +40,7 @@ public class CarParkController {
      *
      * @param carRegistrationNumber
      * @param parkPlaceTypeStr
-     * @return
-     *
-     * query example: http://localhost:8080/carpark/startPark?number=AB 12345
+     * @return query example: http://localhost:8080/carpark/startPark?number=AB 12345
      * query example: http://localhost:8080/carpark/startPark?number=AB 12345&type=Vip
      */
     @RequestMapping("/startPark")
@@ -54,11 +50,17 @@ public class CarParkController {
     ) {
 
         //it is necessary to change this part of code in cas of new parkPlace type
-        ParkPlaceType parkPlaceType = ParkPlaceType.REGULAR;
-        if ("vip".equals(parkPlaceTypeStr.toLowerCase())) {
-            parkPlaceType = ParkPlaceType.VIP;
+        ParkPlaceType parkPlaceType;
+        try {
+            parkPlaceType = ParkPlaceType.valueOf(parkPlaceTypeStr.toUpperCase());
+//        ParkPlaceType parkPlaceType = ParkPlaceType.REGULAR;
+//        if ("vip".equals(parkPlaceTypeStr.toLowerCase())) {
+//            parkPlaceType = ParkPlaceType.VIP;
+//        }
+        } catch (IllegalArgumentException ex) {
+            return "wron";
         }
-        Ticket ticket = parking.startParkAndGetTicket(carRegistrationNumber.toUpperCase(), parkPlaceType, LocalDateTime.now());
+        Ticket ticket = parkingImpl.startParkAndGetTicket(carRegistrationNumber.toUpperCase(), parkPlaceType, LocalDateTime.now());
         return ticket.toString();
     }
 
@@ -68,16 +70,14 @@ public class CarParkController {
      * As a parking operator, I want to check if the vehicle has started the parking meter.
      *
      * @param carRegistrationNumber
-     * @return
-     *
-     * query example: http://localhost:8080/carpark/checkIfStarted?number=AB 12345
+     * @return query example: http://localhost:8080/carpark/checkIfStarted?number=AB 12345
      */
 
     @RequestMapping("/checkIfStarted")
     public String checkIfStarted(
             @RequestParam("number") String carRegistrationNumber
     ) {
-        Boolean result = parking.checkIfVehicleStartedParking(carRegistrationNumber.toUpperCase());
+        Boolean result = parkingImpl.checkIfVehicleStartedParking(carRegistrationNumber.toUpperCase());
         return Boolean.toString(result);
     }
 
@@ -86,16 +86,14 @@ public class CarParkController {
      * As a driver, I want to stop the parking meter, so that I pay only for the actual parking time
      *
      * @param ticketNumber
-     * @return
-     *
-     * query example: http://localhost:8080/carpark/stopPark?ticket=0
+     * @return query example: http://localhost:8080/carpark/stopPark?ticket=0
      */
 
     @RequestMapping("/stopPark")
     public String stopParkTheCar(
             @RequestParam("ticket") int ticketNumber
     ) {
-        Ticket ticket = parking.stopPark(ticketNumber);
+        Ticket ticket = parkingImpl.stopPark(ticketNumber);
         return ticket.toString();
     }
 
@@ -105,17 +103,16 @@ public class CarParkController {
      * I want to know how much I have to pay for parking.
      *
      * @param ticketNumber
-     * @return
-     *
-     * query example: http://localhost:8080/carpark/getTicketFee?number=0
+     * @return query example: http://localhost:8080/carpark/getTicketFee?number=0
      * query example: http://localhost:8080/carpark/getTicketFee?number=2
      */
     @RequestMapping("/getTicketFee")
     public String calculateFeeForParticularTicket(
             @RequestParam("number") int ticketNumber
     ) {
-        double feeValue = parking.calculateFee(ticketNumber, LocalDateTime.now());
-        return Double.toString(feeValue);
+        BigDecimal noFee = new BigDecimal(0.0);
+        BigDecimal feeValue = Optional.of(parkingImpl.calculateFee(ticketNumber, LocalDateTime.now())).orElse(noFee);
+        return new BigDecimal(100).multiply(feeValue).toString();
     }
 
 }
