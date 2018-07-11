@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import pl.ssitarek.carpark.config.CarParkParameter;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -19,11 +20,14 @@ import java.time.LocalDateTime;
 public class ParkingImplTestIntegr {
 
     @Autowired
+    CarParkParameter carParkParameter;
+
+    @Autowired
     ParkingImpl parkingImplForTests;
 
     @Before
     public void SetUp() {
-        parkingImplForTests.build();
+        parkingImplForTests.setCarParkParameter(carParkParameter);
     }
 
     @Test

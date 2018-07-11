@@ -1,4 +1,4 @@
-package pl.ssitarek.carpark.controllers;
+package pl.ssitarek.carpark;
 
 import java.time.LocalDateTime;
 

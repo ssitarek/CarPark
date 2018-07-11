@@ -13,6 +13,8 @@ import java.util.Map;
 
 public class CarParkParameter {
 
+    private String carParkName;
+    private String carParkAddress;
     private int numberOfPlaces;
     private Map<ParkPlaceType, List<ParkPlace>> parkPlaceTypeListMap;
     private int lastTicketNumber;
@@ -99,5 +101,21 @@ public class CarParkParameter {
 
     public void setPayment(PaymentImpl payment) {
         this.payment = payment;
+    }
+
+    public String getCarParkName() {
+        return carParkName;
+    }
+
+    public void setCarParkName(String carParkName) {
+        this.carParkName = carParkName;
+    }
+
+    public String getCarParkAddress() {
+        return carParkAddress;
+    }
+
+    public void setCarParkAddress(String carParkAddress) {
+        this.carParkAddress = carParkAddress;
     }
 }

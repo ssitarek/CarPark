@@ -1,11 +1,8 @@
 package pl.ssitarek.carpark;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.ssitarek.carpark.config.CarParkParameter;
-import pl.ssitarek.carpark.controllers.TimeToStringConversions;
 
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,35 +10,17 @@ import java.util.List;
 @Service
 public class ParkingImpl implements Parking {
 
-    @Value("${carPark.configuration.numberOfRegularParkPlaces}")
-    private int initialNumberOfRegular;
-
-    @Value("${carPark.configuration.numberOfVipParkPlaces}")
-    private int initialNumberOfVip;
-
-    @Value("${carPark.configuration.name}")
-    private String name;
-
-    @Value("${carPark.configuration.address}")
-    private String address;
-
     private CarParkParameter carParkParameter;
 
     public ParkingImpl() {
 
     }
 
-    @PostConstruct
-    public void build() {
-
-        carParkParameter = new CarParkParameter(initialNumberOfRegular, initialNumberOfVip);
-    }
-
     @Override
     public String toString() {
         return "Parking{" +
-                "name='" + name + '\'' +
-                ", address='" + address + '\'' +
+                "name='" + carParkParameter.getCarParkName() + '\'' +
+                ", address='" + carParkParameter.getCarParkAddress() + '\'' +
                 ", numberOfPlaces=" + carParkParameter.getNumberOfPlaces() +
                 ", numberOfRegular=" + carParkParameter.getParkPlaceTypeListMap().get(ParkPlaceType.REGULAR).size() +
                 ", numberOfVip=" + carParkParameter.getParkPlaceTypeListMap().get(ParkPlaceType.VIP).size() +
@@ -228,6 +207,14 @@ public class ParkingImpl implements Parking {
             }
         }
         return -1;
+    }
+
+    public CarParkParameter getCarParkParameter() {
+        return carParkParameter;
+    }
+
+    public void setCarParkParameter(CarParkParameter carParkParameter) {
+        this.carParkParameter = carParkParameter;
     }
 
     public static class ErrorsAndMessages {
