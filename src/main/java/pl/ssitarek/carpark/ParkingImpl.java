@@ -3,6 +3,7 @@ package pl.ssitarek.carpark;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.ssitarek.carpark.config.CarParkParameter;
+import pl.ssitarek.carpark.controllers.TimeToStringConversions;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
@@ -34,7 +35,6 @@ public class ParkingImpl implements Parking {
     public void build() {
 
         carParkParameter = new CarParkParameter(initialNumberOfRegular, initialNumberOfVip);
-        System.out.println("has been created " + name);
     }
 
     @Override
@@ -52,13 +52,13 @@ public class ParkingImpl implements Parking {
     /**
      * 5. As a parking owner, I want to know how much money was earned during a given day
      *
-     * @param date
+     * @param dateString
      * @return
      */
     @Override
-    public BigDecimal getDailyFeeForSingleDate(String date) {
+    public BigDecimal getDailyFeeForSingleDate(String dateString) {
 
-        return carParkParameter.getDailyFeeMap().get(date);//Optional.ofNullable(dailyFeeMap.get(date)).orElse(new BigDecimal(0.0));
+        return carParkParameter.getDailyFeeMap().get(dateString);//Optional.ofNullable(dailyFeeMap.get(date)).orElse(new BigDecimal(0.0));
 
     }
 
@@ -111,7 +111,7 @@ public class ParkingImpl implements Parking {
         ticket.updateTicketData(currentDateTime, fee, ErrorsAndMessages.MESSAGE_PAYMENT_OK);
 
         //prepare to calculate dailyFee
-        String workingDay = convertTimeToString(ticket.getReservedTo());
+        String workingDay = TimeToStringConversions.doConversion(ticket.getReservedTo());
         if (carParkParameter.getDailyFeeMap().get(workingDay) == null) {
             carParkParameter.getDailyFeeMap().put(workingDay, new BigDecimal(0.0));
         }
@@ -228,15 +228,6 @@ public class ParkingImpl implements Parking {
             }
         }
         return -1;
-    }
-
-    private String convertTimeToString(LocalDateTime localDateTime) {
-
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(localDateTime.getYear());
-        stringBuilder.append(String.format("%02d", localDateTime.getMonthValue()));
-        stringBuilder.append(String.format("%02d", localDateTime.getDayOfMonth()));
-        return stringBuilder.toString();
     }
 
     public static class ErrorsAndMessages {

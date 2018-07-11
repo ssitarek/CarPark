@@ -80,4 +80,24 @@ public class CarParkParameter {
     public int getLastTicketNumber() {
         return lastTicketNumber;
     }
+
+    public void setNumberOfPlaces(int numberOfPlaces) {
+        this.numberOfPlaces = numberOfPlaces;
+    }
+
+    public void setParkPlaceTypeListMap(Map<ParkPlaceType, List<ParkPlace>> parkPlaceTypeListMap) {
+        this.parkPlaceTypeListMap = parkPlaceTypeListMap;
+    }
+
+    public void setCurrentTicketsMap(Map<Integer, Ticket> currentTicketsMap) {
+        this.currentTicketsMap = currentTicketsMap;
+    }
+
+    public void setDailyFeeMap(Map<String, BigDecimal> dailyFeeMap) {
+        this.dailyFeeMap = dailyFeeMap;
+    }
+
+    public void setPayment(PaymentImpl payment) {
+        this.payment = payment;
+    }
 }
