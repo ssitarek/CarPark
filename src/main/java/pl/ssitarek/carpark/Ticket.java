@@ -14,8 +14,8 @@ public class Ticket {
     private String ticketMessage;
 
     public Ticket() {
-        //empty constructor
     }
+
 
     public Ticket(int ticketNumber, ParkPlace parkPlace) {
 
@@ -28,7 +28,7 @@ public class Ticket {
 
     public void generateEmptyTicketWithMessage(String message) {
 
-        ticketNumber = 0;
+        ticketNumber = -1;
         parkPlace = null;
         reservedTo = null;
         ticketFee = null;
@@ -45,6 +45,7 @@ public class Ticket {
     @Override
     public String toString() {
 
+        //to prevent of null
         ParkPlace parkPlaceForString = Optional
                 .ofNullable(parkPlace)
                 .orElse(new ParkPlace(0, ParkPlaceType.REGULAR));
@@ -52,21 +53,22 @@ public class Ticket {
                 .ofNullable(ticketFee)
                 .orElse(new BigDecimal(0.0));
 
+        //display
         return "Ticket{" +
-                "ticketNumber=" + ticketNumber +
-                ", carRegistryNumber=" + parkPlaceForString.getCarRegistryNumber() +
-                ", parkPlaceType=" + parkPlaceForString.getPlaceType() +
-                ", parkPlaceNumber=" + parkPlaceForString.getPlaceNumber() +
-                ", startDateTime=" + parkPlaceForString.getReservedFrom() +
-                ", stopDateTime=" + reservedTo +
-                ", ticketFee=" + ticketFeeForString.toString() +
-                ", ticketMessage=" + ticketMessage +
+                "\nticketNumber=" + ticketNumber +
+                "\ncarRegistryNumber=" + parkPlaceForString.getCarRegistryNumber() +
+                "\nparkPlaceType=" + parkPlaceForString.getPlaceType() +
+                "\nparkPlaceNumber=" + parkPlaceForString.getPlaceNumber() +
+                "\nstartDateTime=" + parkPlaceForString.getReservedFrom() +
+                "\nstopDateTime=" + reservedTo +
+                "\nticketFee=" + ticketFeeForString.toString() +
+                "\n\nticketMessage=" + ticketMessage +
                 '}';
     }
 
     public BigDecimal calculateTicketFee(LocalDateTime localDateTime) {
 
-        if ((localDateTime == null)||(parkPlace == null)) {
+        if ((localDateTime == null) || (parkPlace == null)) {
             return null;
         }
         if (parkPlace.getReservedFrom() == null) {

@@ -188,7 +188,7 @@ public class TicketTest {
         String message = "test message";
         ticket.generateEmptyTicketWithMessage(message);
 
-        Assert.assertEquals(0, ticket.getTicketNumber());
+        Assert.assertEquals(-1, ticket.getTicketNumber());
         Assert.assertNull(ticket.getParkPlace());
         Assert.assertNull(ticket.getReservedTo());
         Assert.assertNull(ticket.getTicketFee());

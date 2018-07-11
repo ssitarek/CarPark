@@ -8,7 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-import pl.ssitarek.carpark.config.CarParkParameter;
+import pl.ssitarek.carpark.config.data.CarParkParameter;
+import pl.ssitarek.carpark.config.data.ErrorsAndMessages;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -55,7 +56,7 @@ public class ParkingImplTestIntegr {
         Ticket ticket2 = parkingImplForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
 
         Assert.assertEquals("", ticket1.getTicketMessage());
-        Assert.assertEquals(ParkingImpl.ErrorsAndMessages.ERROR_RESERVATION, ticket2.getTicketMessage());
+        Assert.assertEquals(ErrorsAndMessages.ERROR_RESERVATION, ticket2.getTicketMessage());
     }
 
     @Test
@@ -108,7 +109,7 @@ public class ParkingImplTestIntegr {
         Assert.assertEquals(0, ticket.getTicketNumber());
         Assert.assertNull(ticket.getParkPlace());
         Assert.assertNull(ticket.getReservedTo());
-        Assert.assertEquals(ParkingImpl.ErrorsAndMessages.ERROR_NO_EMPTY_PLACES, ticket.getTicketMessage());
+        Assert.assertEquals(ErrorsAndMessages.ERROR_NO_EMPTY_PLACES, ticket.getTicketMessage());
     }
 
     @Test
@@ -125,16 +126,16 @@ public class ParkingImplTestIntegr {
     public void payAndUndoReservationTicketFound() {
 
         parkingImplForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
-        Ticket ticket = parkingImplForTests.stopPark(0);
-        Assert.assertTrue(ticket.getTicketMessage().equals(ParkingImpl.ErrorsAndMessages.MESSAGE_FAREWELL));
+        Ticket ticket = parkingImplForTests.stopPark(0, LocalDateTime.now());
+        Assert.assertTrue(ticket.getTicketMessage().equals(ErrorsAndMessages.MESSAGE_FAREWELL));
     }
 
     @Test
     public void payAndUndoReservationTicketNotFound() {
 
         parkingImplForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
-        Ticket ticket = parkingImplForTests.stopPark(10);
-        Assert.assertTrue(ticket.getTicketMessage().equals(ParkingImpl.ErrorsAndMessages.ERROR_TICKET_NOT_FOUND));
+        Ticket ticket = parkingImplForTests.stopPark(10, LocalDateTime.now());
+        Assert.assertTrue(ticket.getTicketMessage().equals(ErrorsAndMessages.ERROR_TICKET_NOT_FOUND));
     }
 
     @Test
@@ -157,10 +158,10 @@ public class ParkingImplTestIntegr {
 
         for (int i = 0; i < 4; i++) {
             Ticket ticket = parkingImplForTests.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(125 - 30 * i));
-            parkingImplForTests.stopPark(ticket.getTicketNumber());
+            parkingImplForTests.stopPark(ticket.getTicketNumber(), LocalDateTime.now());
         }
 
-        String date = convertTimeToString(LocalDateTime.now());
+        String date = TimeToStringConversions.doConversion(LocalDateTime.now());
         BigDecimal expectedValue = new BigDecimal(1300);
         BigDecimal result = parkingImplForTests.getDailyFeeForSingleDate(date);
         Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
@@ -171,22 +172,13 @@ public class ParkingImplTestIntegr {
 
         for (int i = 0; i < 4; i++) {
             Ticket ticket = parkingImplForTests.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(125 - 30 * i));
-            parkingImplForTests.stopPark(ticket.getTicketNumber());
+            parkingImplForTests.stopPark(ticket.getTicketNumber(), LocalDateTime.now());
         }
         Ticket ticket = parkingImplForTests.startParkAndGetTicket("carRegularNext", ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(150));
 
-        String date = convertTimeToString(LocalDateTime.now());
+        String date = TimeToStringConversions.doConversion(LocalDateTime.now());
         BigDecimal expectedValue = new BigDecimal(1300);
         BigDecimal result = parkingImplForTests.getDailyFeeForSingleDate(date);
         Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
-    }
-
-    private static String convertTimeToString(LocalDateTime localDateTime) {
-
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(localDateTime.getYear());
-        stringBuilder.append(String.format("%02d", localDateTime.getMonthValue()));
-        stringBuilder.append(String.format("%02d", localDateTime.getDayOfMonth()));
-        return stringBuilder.toString();
     }
 }

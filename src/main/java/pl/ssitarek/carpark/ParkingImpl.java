@@ -1,7 +1,8 @@
 package pl.ssitarek.carpark;
 
 import org.springframework.stereotype.Service;
-import pl.ssitarek.carpark.config.CarParkParameter;
+import pl.ssitarek.carpark.config.data.CarParkParameter;
+import pl.ssitarek.carpark.config.data.ErrorsAndMessages;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,8 +32,8 @@ public class ParkingImpl implements Parking {
     /**
      * 5. As a parking owner, I want to know how much money was earned during a given day
      *
-     * @param dateString
-     * @return
+     * @param dateString the string composed of yyyyMMdd e.g. "20180701"
+     * @return fee in grosz (1 centPLN)
      */
     @Override
     public BigDecimal getDailyFeeForSingleDate(String dateString) {
@@ -44,8 +45,8 @@ public class ParkingImpl implements Parking {
     /**
      * 4. As a driver, I want to know how much I have to pay for parking.
      *
-     * @param ticketNumber
-     * @return
+     * @param ticketNumber number that is equal or higher than 0;
+     * @return fee in grosz (1 centPLN)
      */
     @Override
     public BigDecimal calculateFee(int ticketNumber, LocalDateTime currentDateTime) {
@@ -61,11 +62,11 @@ public class ParkingImpl implements Parking {
     /**
      * 3. As a driver, I want to stop the parking meter, so that I pay only for the actual parking time
      *
-     * @param ticketNumber
-     * @return
+     * @param ticketNumber number that is equal or higher than 0;
+     * @return ticket with the message that are in const MESSAGE_FAREWELL e.g. "!!! HAVE A NICE DAY !!!"
      */
     @Override
-    public Ticket stopPark(int ticketNumber) {
+    public Ticket stopPark(int ticketNumber, LocalDateTime currentDateTime) {
 
         Ticket ticket = carParkParameter.getCurrentTicketsMap().get(ticketNumber);
         if (ticket == null) {
@@ -74,7 +75,6 @@ public class ParkingImpl implements Parking {
             return ticket;
         }
 
-        LocalDateTime currentDateTime = getCurrentDateTime();
         BigDecimal fee = calculateFee(ticketNumber, currentDateTime);
         if (fee == null) {
             ticket = new Ticket();
@@ -107,20 +107,19 @@ public class ParkingImpl implements Parking {
         return ticket;
     }
 
-    private LocalDateTime getCurrentDateTime() {
-
-        return LocalDateTime.now();
-    }
-
 
     /**
      * 2 As a parking operator, I want to check if the vehicle has started the parking meter.
      *
-     * @param carRegistryNumber
-     * @return
+     * @param carRegistryNumber string that has been validated inside (e.g. has got the length [1,15])
+     * @return true if started, false otherwise
      */
     @Override
     public boolean checkIfVehicleStartedParking(String carRegistryNumber) {
+
+        if (!carRegistryValidator(carRegistryNumber)){
+            return false;
+        }
 
         ParkPlaceType[] parkPlaceTypes = ParkPlaceType.values();
         for (int i = 0; i < carParkParameter.getParkPlaceTypeListMap().size(); i++) {
@@ -134,16 +133,30 @@ public class ParkingImpl implements Parking {
         return false;
     }
 
+    private boolean carRegistryValidator(String carRegistryNumber) {
+
+        if ((carRegistryNumber.length()==0)||(carRegistryNumber.length()>15)){
+            return false;
+        }
+        return true;
+    }
+
 
     /**
      * 1. As a driver, I want to start the parking meter, so I don’t have to pay the fine for the invalid parking.
      *
-     * @param carRegistrationNumber
+     * @param carRegistrationNumber string that has been validated inside (e.g. has got the length [1,15])
      * @param parkPlaceType
      * @return message dedicated to the ticket machine
      */
     @Override
     public Ticket startParkAndGetTicket(String carRegistrationNumber, ParkPlaceType parkPlaceType, LocalDateTime localDateTime) {
+
+        if (!carRegistryValidator(carRegistrationNumber)){
+            Ticket ticket = new Ticket();
+            ticket.generateEmptyTicketWithMessage(ErrorsAndMessages.ERROR_INVALID_REGISTRY_NUMBER);
+            return ticket;
+        }
 
         int emptyPlaceNumber = getEmptyPlaceNumber(parkPlaceType);
         if (emptyPlaceNumber == -1) {
@@ -215,18 +228,6 @@ public class ParkingImpl implements Parking {
 
     public void setCarParkParameter(CarParkParameter carParkParameter) {
         this.carParkParameter = carParkParameter;
-    }
-
-    public static class ErrorsAndMessages {
-
-        public static final String ERROR_PAYMENT = "!!! PAYMENT ISSUE, PLEASE CONTACT PARKING ADMINISTRATOR !!!";
-        public static final String ERROR_FEE = "!!! ERROR DURING THE FEE CALCULATION !!!";
-        public static final String ERROR_NO_EMPTY_PLACES = "!!! NO EMPTY PLACES !!!";
-        public static final String ERROR_RESERVATION = "!!! PROBLEMS DURING RESERVATION PROCESS, WRONG PARK PLACE TYPE OR THE CAR IS ALREDY PARKED !!!";
-        public static final String ERROR_TICKET_NOT_FOUND = "!!! TICKET NOT FOUND IN OUR DATABASE !!!";
-        public static final String ERROR_UNDO_RESERVATION = "!!! PAYMENT HAS BEEN REGISTERED BUT RESERVATIONT HAS NOT BEEN REMOVED , PLEASE CONTACT PARKING ADMINISTRATOR !!!";
-        public static final String MESSAGE_FAREWELL = "!!! HAVE A NICE DAY !!!";
-        public static final String MESSAGE_PAYMENT_OK = "!!! PAYMENT OK !!!";
     }
 }
 

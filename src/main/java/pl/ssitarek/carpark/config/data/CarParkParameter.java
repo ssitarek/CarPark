@@ -1,4 +1,4 @@
-package pl.ssitarek.carpark.config;
+package pl.ssitarek.carpark.config.data;
 
 import pl.ssitarek.carpark.ParkPlace;
 import pl.ssitarek.carpark.ParkPlaceType;

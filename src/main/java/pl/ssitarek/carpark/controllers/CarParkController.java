@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pl.ssitarek.carpark.ParkPlaceType;
 import pl.ssitarek.carpark.ParkingImpl;
 import pl.ssitarek.carpark.Ticket;
+import pl.ssitarek.carpark.config.data.ErrorsAndMessages;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -55,7 +56,7 @@ public class CarParkController {
             parkPlaceType = ParkPlaceType.valueOf(parkPlaceTypeStr.toUpperCase());
         } catch (IllegalArgumentException ex) {
             Ticket ticket = new Ticket();
-            ticket.updateTicketData(null, null, ParkingImpl.ErrorsAndMessages.ERROR_RESERVATION);
+            ticket.updateTicketData(null, null, ErrorsAndMessages.ERROR_RESERVATION);
             return ticket.toString();
         }
         Ticket ticket = parkingImpl.startParkAndGetTicket(carRegistrationNumber.toUpperCase(), parkPlaceType, LocalDateTime.now());
@@ -93,7 +94,7 @@ public class CarParkController {
     public String stopParkTheCar(
             @RequestParam("ticket") int ticketNumber
     ) {
-        Ticket ticket = parkingImpl.stopPark(ticketNumber);
+        Ticket ticket = parkingImpl.stopPark(ticketNumber, LocalDateTime.now());
         return ticket.toString();
     }
 

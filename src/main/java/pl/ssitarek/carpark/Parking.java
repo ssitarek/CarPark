@@ -9,7 +9,7 @@ public interface Parking {
 
     BigDecimal calculateFee(int ticketNumber, LocalDateTime currentDateTime);
 
-    Ticket stopPark(int ticketNumber);
+    Ticket stopPark(int ticketNumber, LocalDateTime currentDateTime);
 
     boolean checkIfVehicleStartedParking(String carRegistryNumber);
 
