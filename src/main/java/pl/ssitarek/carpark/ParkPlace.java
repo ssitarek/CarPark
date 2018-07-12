@@ -69,6 +69,4 @@ public class ParkPlace {
     public String getCarRegistryNumber() {
         return carRegistryNumber;
     }
-
-
 }

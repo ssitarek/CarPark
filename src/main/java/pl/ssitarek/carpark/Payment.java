@@ -6,6 +6,6 @@ public interface Payment {
 
     boolean checkPaymentStatus();
 
-    void doPayment(BigDecimal fee, boolean paymentOk);
+    void doPayment(BigDecimal fee, AcceptedCurrency acceptedCurrency, boolean paymentOk);
 
 }

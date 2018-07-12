@@ -1,5 +1,6 @@
 package pl.ssitarek.carpark.config.data;
 
+import pl.ssitarek.carpark.AcceptedCurrency;
 import pl.ssitarek.carpark.ParkPlace;
 import pl.ssitarek.carpark.ParkPlaceType;
 import pl.ssitarek.carpark.PaymentImpl;
@@ -20,7 +21,7 @@ public class CarParkParameter {
     private int lastTicketNumber;
 
     private Map<Integer, Ticket> currentTicketsMap;
-    private Map<String, BigDecimal> dailyFeeMap;
+    private Map<String, Map<AcceptedCurrency, BigDecimal>> dailyIncomeMap;
     private PaymentImpl payment;
 
 
@@ -39,7 +40,7 @@ public class CarParkParameter {
         lastTicketNumber = -1;
 
         currentTicketsMap = new HashMap<>();
-        dailyFeeMap = new HashMap<>();
+        dailyIncomeMap = new HashMap<>();
 
         payment = new PaymentImpl();
 
@@ -66,10 +67,9 @@ public class CarParkParameter {
         return currentTicketsMap;
     }
 
-    public Map<String, BigDecimal> getDailyFeeMap() {
-        return dailyFeeMap;
+    public Map<String, Map<AcceptedCurrency, BigDecimal>> getDailyIncomeMap() {
+        return dailyIncomeMap;
     }
-
 
     public PaymentImpl getPayment() {
         return payment;
@@ -81,26 +81,6 @@ public class CarParkParameter {
 
     public int getLastTicketNumber() {
         return lastTicketNumber;
-    }
-
-    public void setNumberOfPlaces(int numberOfPlaces) {
-        this.numberOfPlaces = numberOfPlaces;
-    }
-
-    public void setParkPlaceTypeListMap(Map<ParkPlaceType, List<ParkPlace>> parkPlaceTypeListMap) {
-        this.parkPlaceTypeListMap = parkPlaceTypeListMap;
-    }
-
-    public void setCurrentTicketsMap(Map<Integer, Ticket> currentTicketsMap) {
-        this.currentTicketsMap = currentTicketsMap;
-    }
-
-    public void setDailyFeeMap(Map<String, BigDecimal> dailyFeeMap) {
-        this.dailyFeeMap = dailyFeeMap;
-    }
-
-    public void setPayment(PaymentImpl payment) {
-        this.payment = payment;
     }
 
     public String getCarParkName() {

@@ -6,7 +6,9 @@ import pl.ssitarek.carpark.config.data.ErrorsAndMessages;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ParkingImpl implements Parking {
@@ -30,23 +32,21 @@ public class ParkingImpl implements Parking {
 
 
     /**
-     * 5. As a parking owner, I want to know how much money was earned during a given day
-     *
      * @param dateString the string composed of yyyyMMdd e.g. "20180701"
-     * @return fee in grosz (1 centPLN)
+     * @return map of fee in different currencies in 1 cent (of PLN, of EUR etc.)
+     * 5. As a parking owner, I want to know how much money was earned during a given day
      */
     @Override
-    public BigDecimal getDailyFeeForSingleDate(String dateString) {
+    public Map<AcceptedCurrency, BigDecimal> getDailyIncomeForSingleDate(String dateString) {
 
-        return carParkParameter.getDailyFeeMap().get(dateString);//Optional.ofNullable(dailyFeeMap.get(date)).orElse(new BigDecimal(0.0));
-
+        return carParkParameter.getDailyIncomeMap().get(dateString);//Optional.ofNullable(dailyFeeMap.get(date)).orElse(new BigDecimal(0.0));
     }
 
     /**
+     * @param ticketNumber    number that is equal or higher than 0;
+     * @param currentDateTime date and time of calculation
+     * @return fee in (1 centPLN)
      * 4. As a driver, I want to know how much I have to pay for parking.
-     *
-     * @param ticketNumber number that is equal or higher than 0;
-     * @return fee in grosz (1 centPLN)
      */
     @Override
     public BigDecimal calculateFee(int ticketNumber, LocalDateTime currentDateTime) {
@@ -60,13 +60,13 @@ public class ParkingImpl implements Parking {
 
 
     /**
-     * 3. As a driver, I want to stop the parking meter, so that I pay only for the actual parking time
-     *
-     * @param ticketNumber number that is equal or higher than 0;
+     * @param ticketNumber    number that is equal or higher than 0;
+     * @param currentDateTime date and time of calculation     *
      * @return ticket with the message that are in const MESSAGE_FAREWELL e.g. "!!! HAVE A NICE DAY !!!"
+     * 3. As a driver, I want to stop the parking meter, so that I pay only for the actual parking time
      */
     @Override
-    public Ticket stopPark(int ticketNumber, LocalDateTime currentDateTime) {
+    public Ticket stopPark(int ticketNumber, LocalDateTime currentDateTime, AcceptedCurrency acceptedCurrency) {
 
         Ticket ticket = carParkParameter.getCurrentTicketsMap().get(ticketNumber);
         if (ticket == null) {
@@ -82,21 +82,26 @@ public class ParkingImpl implements Parking {
             return ticket;
         }
 
-        carParkParameter.getPayment().doPayment(fee, true);
+        carParkParameter.getPayment().doPayment(fee, acceptedCurrency, true);
         boolean isPaymentOk = carParkParameter.getPayment().checkPaymentStatus();
-        if (isPaymentOk == false) {
+        if (!isPaymentOk) {
             ticket.updateTicketData(currentDateTime, fee, ErrorsAndMessages.ERROR_PAYMENT);
         }
         ticket.updateTicketData(currentDateTime, fee, ErrorsAndMessages.MESSAGE_PAYMENT_OK);
 
         //prepare to calculate dailyFee
         String workingDay = TimeToStringConversions.doConversion(ticket.getReservedTo());
-        if (carParkParameter.getDailyFeeMap().get(workingDay) == null) {
-            carParkParameter.getDailyFeeMap().put(workingDay, new BigDecimal(0.0));
+        if (carParkParameter.getDailyIncomeMap().get(workingDay) == null) {
+            carParkParameter.getDailyIncomeMap().put(workingDay, prepareEmptyDailyFeeMap());
         }
-        BigDecimal val = carParkParameter.getDailyFeeMap().get(workingDay);
+
+        Map<AcceptedCurrency, BigDecimal> mapOfDailyFee = carParkParameter.getDailyIncomeMap().get(workingDay);
+        BigDecimal val = mapOfDailyFee.get(acceptedCurrency);
+
+        //no possibility to do val+=ticket.getticketFee() due to the fact that it is BigDecimal
         val = val.add(ticket.getTicketFee());
-        carParkParameter.getDailyFeeMap().put(workingDay, val);
+        mapOfDailyFee.put(acceptedCurrency, val);
+        carParkParameter.getDailyIncomeMap().put(workingDay, mapOfDailyFee);
 
         if (!unDoReserveParkPlace(ticket.getParkPlace())) {
             ticket.updateTicketData(currentDateTime, fee, ErrorsAndMessages.ERROR_UNDO_RESERVATION);
@@ -107,17 +112,31 @@ public class ParkingImpl implements Parking {
         return ticket;
     }
 
+    /**
+     * create empty fee map
+     *
+     * @return income map with currency and fee
+     */
+
+    public static Map<AcceptedCurrency, BigDecimal> prepareEmptyDailyFeeMap() {
+        Map<AcceptedCurrency, BigDecimal> singleDayFee = new HashMap<>();
+        AcceptedCurrency[] acceptedCurrencies = AcceptedCurrency.values();
+        for (int i = 0; i < acceptedCurrencies.length; i++) {
+            singleDayFee.put(acceptedCurrencies[i], new BigDecimal(0));
+        }
+        return singleDayFee;
+    }
+
 
     /**
-     * 2 As a parking operator, I want to check if the vehicle has started the parking meter.
-     *
      * @param carRegistryNumber string that has been validated inside (e.g. has got the length [1,15])
      * @return true if started, false otherwise
+     * 2 As a parking operator, I want to check if the vehicle has started the parking meter.
      */
     @Override
     public boolean checkIfVehicleStartedParking(String carRegistryNumber) {
 
-        if (!carRegistryValidator(carRegistryNumber)){
+        if (!carRegistryValidator(carRegistryNumber)) {
             return false;
         }
 
@@ -135,7 +154,7 @@ public class ParkingImpl implements Parking {
 
     private boolean carRegistryValidator(String carRegistryNumber) {
 
-        if ((carRegistryNumber.length()==0)||(carRegistryNumber.length()>15)){
+        if ((carRegistryNumber.length() == 0) || (carRegistryNumber.length() > 15)) {
             return false;
         }
         return true;
@@ -143,16 +162,16 @@ public class ParkingImpl implements Parking {
 
 
     /**
-     * 1. As a driver, I want to start the parking meter, so I don’t have to pay the fine for the invalid parking.
-     *
      * @param carRegistrationNumber string that has been validated inside (e.g. has got the length [1,15])
-     * @param parkPlaceType
+     * @param parkPlaceType         type of place i.e. REGULAR or VIP
+     * @param currentDateTime       date and time of calculation     *
      * @return message dedicated to the ticket machine
+     * 1. As a driver, I want to start the parking meter, so I don’t have to pay the fine for the invalid parking.
      */
     @Override
-    public Ticket startParkAndGetTicket(String carRegistrationNumber, ParkPlaceType parkPlaceType, LocalDateTime localDateTime) {
+    public Ticket startParkAndGetTicket(String carRegistrationNumber, ParkPlaceType parkPlaceType, LocalDateTime currentDateTime) {
 
-        if (!carRegistryValidator(carRegistrationNumber)){
+        if (!carRegistryValidator(carRegistrationNumber)) {
             Ticket ticket = new Ticket();
             ticket.generateEmptyTicketWithMessage(ErrorsAndMessages.ERROR_INVALID_REGISTRY_NUMBER);
             return ticket;
@@ -165,7 +184,7 @@ public class ParkingImpl implements Parking {
             return ticket;
         }
 
-        boolean isReservationOk = doReserveParkPlace(parkPlaceType, emptyPlaceNumber, carRegistrationNumber, localDateTime);
+        boolean isReservationOk = doReserveParkPlace(parkPlaceType, emptyPlaceNumber, carRegistrationNumber, currentDateTime);
         if (!isReservationOk) {
             Ticket ticket = new Ticket();
             ticket.generateEmptyTicketWithMessage(ErrorsAndMessages.ERROR_RESERVATION);

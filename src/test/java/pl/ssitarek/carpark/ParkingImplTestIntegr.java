@@ -14,6 +14,7 @@ import pl.ssitarek.carpark.config.data.ErrorsAndMessages;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ParkingImpl.class)
@@ -126,7 +127,8 @@ public class ParkingImplTestIntegr {
     public void payAndUndoReservationTicketFound() {
 
         parkingImplForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
-        Ticket ticket = parkingImplForTests.stopPark(0, LocalDateTime.now());
+        AcceptedCurrency acceptedCurrency = AcceptedCurrency.PLN;
+        Ticket ticket = parkingImplForTests.stopPark(0, LocalDateTime.now(), acceptedCurrency);
         Assert.assertTrue(ticket.getTicketMessage().equals(ErrorsAndMessages.MESSAGE_FAREWELL));
     }
 
@@ -134,7 +136,8 @@ public class ParkingImplTestIntegr {
     public void payAndUndoReservationTicketNotFound() {
 
         parkingImplForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
-        Ticket ticket = parkingImplForTests.stopPark(10, LocalDateTime.now());
+        AcceptedCurrency acceptedCurrency = AcceptedCurrency.PLN;
+        Ticket ticket = parkingImplForTests.stopPark(10, LocalDateTime.now(), acceptedCurrency);
         Assert.assertTrue(ticket.getTicketMessage().equals(ErrorsAndMessages.ERROR_TICKET_NOT_FOUND));
     }
 
@@ -154,31 +157,33 @@ public class ParkingImplTestIntegr {
     }
 
     @Test
-    public void testGetDailyFee() {
+    public void testGetDailyIncomeNoCarsOnTheCarPark() {
 
+        AcceptedCurrency acceptedCurrency = AcceptedCurrency.PLN;
         for (int i = 0; i < 4; i++) {
             Ticket ticket = parkingImplForTests.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(125 - 30 * i));
-            parkingImplForTests.stopPark(ticket.getTicketNumber(), LocalDateTime.now());
+            parkingImplForTests.stopPark(ticket.getTicketNumber(), LocalDateTime.now(), acceptedCurrency);
         }
 
         String date = TimeToStringConversions.doConversion(LocalDateTime.now());
         BigDecimal expectedValue = new BigDecimal(1300);
-        BigDecimal result = parkingImplForTests.getDailyFeeForSingleDate(date);
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        Map<AcceptedCurrency, BigDecimal> result = parkingImplForTests.getDailyIncomeForSingleDate(date);
+        Assert.assertTrue(expectedValue.doubleValue() == result.get(acceptedCurrency).doubleValue());
     }
 
     @Test
-    public void testGetDailyFeeSingleCarParked() {
+    public void testGetDailyIncomeSingleCarParked() {
 
+        AcceptedCurrency acceptedCurrency = AcceptedCurrency.PLN;
         for (int i = 0; i < 4; i++) {
             Ticket ticket = parkingImplForTests.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(125 - 30 * i));
-            parkingImplForTests.stopPark(ticket.getTicketNumber(), LocalDateTime.now());
+            parkingImplForTests.stopPark(ticket.getTicketNumber(), LocalDateTime.now(), acceptedCurrency);
         }
         Ticket ticket = parkingImplForTests.startParkAndGetTicket("carRegularNext", ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(150));
 
         String date = TimeToStringConversions.doConversion(LocalDateTime.now());
         BigDecimal expectedValue = new BigDecimal(1300);
-        BigDecimal result = parkingImplForTests.getDailyFeeForSingleDate(date);
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        Map<AcceptedCurrency, BigDecimal> result = parkingImplForTests.getDailyIncomeForSingleDate(date);
+        Assert.assertTrue(expectedValue.doubleValue() == result.get(acceptedCurrency).doubleValue());
     }
 }

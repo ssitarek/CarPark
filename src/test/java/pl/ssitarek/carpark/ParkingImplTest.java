@@ -9,13 +9,14 @@ import pl.ssitarek.carpark.config.data.ErrorsAndMessages;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static pl.ssitarek.carpark.ParkingImpl.prepareEmptyDailyFeeMap;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ParkingImplTest {
@@ -37,31 +38,41 @@ public class ParkingImplTest {
     @Test
     public void testGetDailyFeeForParticularDate() {
 
-        when(parkingImpl.getCarParkParameter().getDailyFeeMap())
-                .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getDailyFeeMap());
+        when(parkingImpl.getCarParkParameter().getDailyIncomeMap())
+                .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getDailyIncomeMap());
 
         String dateString = TimeToStringConversions.doConversion(CURRENT_DATE_TIME);
-        assertEquals(new BigDecimal(400), parkingImpl.getDailyFeeForSingleDate(dateString));
+        Map<AcceptedCurrency, BigDecimal> singleDayFee = parkingImpl.getDailyIncomeForSingleDate(dateString);
+        assertEquals(new BigDecimal(400), singleDayFee.get(AcceptedCurrency.PLN));
+        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.EUR));
+        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.USD));
+        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.GPB));
+        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.CHF));
     }
 
     @Test
     public void testGetDailyFeeForParticularDateMinusOneDay() {
 
-        when(parkingImpl.getCarParkParameter().getDailyFeeMap())
-                .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getDailyFeeMap());
+        when(parkingImpl.getCarParkParameter().getDailyIncomeMap())
+                .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getDailyIncomeMap());
 
         String dateString = TimeToStringConversions.doConversion(CURRENT_DATE_TIME.minusDays(1));
-        assertEquals(new BigDecimal(0), parkingImpl.getDailyFeeForSingleDate(dateString));
+        Map<AcceptedCurrency, BigDecimal> singleDayFee = parkingImpl.getDailyIncomeForSingleDate(dateString);
+        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.PLN));
+        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.EUR));
+        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.USD));
+        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.GPB));
+        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.CHF));
     }
 
     @Test
     public void testGetDailyFeeForParticularDateNotExists() {
 
-        when(parkingImpl.getCarParkParameter().getDailyFeeMap())
-                .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getDailyFeeMap());
+        when(parkingImpl.getCarParkParameter().getDailyIncomeMap())
+                .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getDailyIncomeMap());
 
         String dateString = TimeToStringConversions.doConversion(CURRENT_DATE_TIME.minusDays(2));
-        assertNull(parkingImpl.getDailyFeeForSingleDate(dateString));
+        assertNull(parkingImpl.getDailyIncomeForSingleDate(dateString));
     }
 
     @Test
@@ -88,15 +99,16 @@ public class ParkingImplTest {
                 .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getCurrentTicketsMap());
         when(carParkParameter.getPayment())
                 .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getPayment());
-        when(carParkParameter.getDailyFeeMap())
-                .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getDailyFeeMap());
+        when(carParkParameter.getDailyIncomeMap())
+                .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getDailyIncomeMap());
 
-        Ticket ticket = parkingImpl.stopPark(0, CURRENT_DATE_TIME);
+        AcceptedCurrency acceptedCurrency = AcceptedCurrency.PLN;
+        Ticket ticket = parkingImpl.stopPark(0, CURRENT_DATE_TIME, acceptedCurrency);
         assertEquals(ErrorsAndMessages.MESSAGE_FAREWELL, ticket.getTicketMessage());
     }
 
     @Test
-    public void testCheckIfVehicleStartedParking(){
+    public void testCheckIfVehicleStartedParking() {
         when(carParkParameter.getParkPlaceTypeListMap())
                 .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getParkPlaceTypeListMap());
 
@@ -107,7 +119,7 @@ public class ParkingImplTest {
     }
 
     @Test
-    public void testStartParkAndGetTicket(){
+    public void testStartParkAndGetTicket() {
 
         when(carParkParameter.getParkPlaceTypeListMap())
                 .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getParkPlaceTypeListMap());
@@ -119,7 +131,7 @@ public class ParkingImplTest {
     }
 
     @Test
-    public void testStartParkAndGetTicketTwiceTheSame(){
+    public void testStartParkAndGetTicketTwiceTheSame() {
 
         when(carParkParameter.getParkPlaceTypeListMap())
                 .thenReturn(fakeCarParkForTest.fakeCarParkParameter.getParkPlaceTypeListMap());
@@ -156,9 +168,9 @@ public class ParkingImplTest {
 
             //prepare to dailyFee map
             String workingDay = TimeToStringConversions.doConversion(CURRENT_DATE_TIME.minusDays(1));
-            params.getDailyFeeMap().put(workingDay, new BigDecimal(0.0));
+            params.getDailyIncomeMap().put(workingDay, prepareEmptyDailyFeeMap());
             workingDay = TimeToStringConversions.doConversion(CURRENT_DATE_TIME);
-            params.getDailyFeeMap().put(workingDay, new BigDecimal(0.0));
+            params.getDailyIncomeMap().put(workingDay, prepareEmptyDailyFeeMap());
 
             for (int i = 0; i < parkPlaceList.size(); i++) {
 
@@ -178,10 +190,15 @@ public class ParkingImplTest {
                     ticket.updateTicketData(CURRENT_DATE_TIME, fee, ErrorsAndMessages.MESSAGE_PAYMENT_OK);
 
                     //update dailyFee map
-                    BigDecimal val = params.getDailyFeeMap().get(workingDay);
+                    AcceptedCurrency acceptedCurrency = AcceptedCurrency.PLN;
+                    //get single day map -> get value
+                    Map<AcceptedCurrency, BigDecimal> singleDayMap = params.getDailyIncomeMap().get(workingDay);
+                    BigDecimal val = singleDayMap.get(acceptedCurrency);
+                    //calculate fee and add it to daily fee
                     val = val.add(ticket.getTicketFee());
-
-                    params.getDailyFeeMap().put(workingDay, val);
+                    //put fee to singleDayMap -> put singleDayMap to dailyFeeMap
+                    singleDayMap.put(acceptedCurrency, val);
+                    params.getDailyIncomeMap().put(workingDay, singleDayMap);
 
                     //update ticket data of dateTime, fee and message
                     ticket.updateTicketData(CURRENT_DATE_TIME, fee, ErrorsAndMessages.MESSAGE_FAREWELL);
