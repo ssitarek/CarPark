@@ -25,13 +25,23 @@ public class CarParkController {
     @Autowired
     ParkingImpl parkingImpl;
 
+    /**
+     * welcome information
+     * @return string with welcome and car park data
+     * query example: http://localhost:8080/carpark
+     */
     @RequestMapping("")
     public String displayInfo() {
 
         return "Welcome to our CarPark.<pre>Basic information: " + parkingImpl.toString() + "</pre>";
     }
 
-    @RequestMapping("/hello")
+    /**
+     * simple health check with car park data
+     * @return string with car park data
+     * query example: http://localhost:8080/carpark/healthcheck
+     */
+    @RequestMapping("/healthcheck")
     public String hello() {
 
         return "Health check of: " + parkingImpl.toString();

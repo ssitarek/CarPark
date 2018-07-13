@@ -172,6 +172,7 @@ public class ParkingImplTest {
             workingDay = TimeToStringConversions.doConversion(CURRENT_DATE_TIME);
             params.getDailyIncomeMap().put(workingDay, prepareEmptyDailyFeeMap());
 
+            //it cannot be forEach due to the fact that I need (i mod 2)
             for (int i = 0; i < parkPlaceList.size(); i++) {
 
                 //park the car

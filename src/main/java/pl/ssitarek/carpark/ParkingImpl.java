@@ -115,14 +115,13 @@ public class ParkingImpl implements Parking {
     /**
      * create empty fee map
      *
-     * @return income map with currency and fee
+     * @return income map with proper currency, and zero as fee
      */
 
     public static Map<AcceptedCurrency, BigDecimal> prepareEmptyDailyFeeMap() {
         Map<AcceptedCurrency, BigDecimal> singleDayFee = new HashMap<>();
-        AcceptedCurrency[] acceptedCurrencies = AcceptedCurrency.values();
-        for (int i = 0; i < acceptedCurrencies.length; i++) {
-            singleDayFee.put(acceptedCurrencies[i], new BigDecimal(0));
+        for (AcceptedCurrency acceptedCurrency: AcceptedCurrency.values()){
+            singleDayFee.put(acceptedCurrency, new BigDecimal(0));
         }
         return singleDayFee;
     }
@@ -141,8 +140,10 @@ public class ParkingImpl implements Parking {
         }
 
         ParkPlaceType[] parkPlaceTypes = ParkPlaceType.values();
+        //check every type of parkPlace (REGULAR or VIP)
         for (int i = 0; i < carParkParameter.getParkPlaceTypeListMap().size(); i++) {
             List<ParkPlace> tmpList = carParkParameter.getParkPlaceTypeListMap().get(parkPlaceTypes[i]);
+            //check every parkPlace in the particular list (list of REGULAR or list of VIP)
             for (int j = 0; j < tmpList.size(); j++) {
                 if (carRegistryNumber.equals(tmpList.get(j).getCarRegistryNumber())) {
                     return true;

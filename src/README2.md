@@ -40,9 +40,23 @@ http://localhost:8080/carpark/getTicketFee?number=0
  ```
  http://localhost:8080/carpark/getDailyIncome?day=20180712
  ```
+And the final two that weren't a task:
+welcome
+```
+http://localhost:8080/carpark
+```
+and "healthCheck"
+```
+http://localhost:8080/carpark/hello
+```
 
+I have added very simple car registration number validator - length of the string
+has to be lower than 15. More about car registration number can be found here: 
+```
+https://www.zpp.pl/storage/files/2017-04//535bcf66c5a7d0ca1d1484fc95573c864140.pdf
+```
 I will by happy to meet you face to face.
 
 If you look into my resume you will see that I have started to learn Java 
-less than one year ago and it was pure Java, without any web application.
-Despite of my gray hair I am real junior.   
+less than one year ago an it was pure Java, without any web applications.
+Despite of my gray hair I am a real junior.   

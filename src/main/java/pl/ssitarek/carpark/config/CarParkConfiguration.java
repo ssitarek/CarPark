@@ -10,16 +10,16 @@ import pl.ssitarek.carpark.config.data.CarParkParameter;
 @Configuration
 public class CarParkConfiguration {
 
-    @Value("${carPark.configuration.numberOfRegularParkPlaces}")
+    @Value("${carParkNumberOfRegularParkPlaces}")
     private int initialNumberOfRegular;
 
-    @Value("${carPark.configuration.numberOfVipParkPlaces}")
+    @Value("${carParkNumberOfVipParkPlaces}")
     private int initialNumberOfVip;
 
-    @Value("${carPark.configuration.name}")
+    @Value("${carParkName}")
     private String name;
 
-    @Value("${carPark.configuration.address}")
+    @Value("${carParkAddress}")
     private String address;
 
     @Autowired
