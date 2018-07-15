@@ -1,11 +1,14 @@
 package pl.ssitarek.carpark;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class TicketTest {
 
@@ -26,7 +29,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceRegular);
         BigDecimal expectedValue = new BigDecimal(100.0);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     @Test
@@ -36,7 +39,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceRegular);
         BigDecimal expectedValue = new BigDecimal(100.0);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     //60 minutes means that the client has just started second hour due to the invoke time
@@ -47,7 +50,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceRegular);
         BigDecimal expectedValue = new BigDecimal(100);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     //60 minutes means that the client has just started second hour due to the invoke time
@@ -58,7 +61,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceRegular);
         BigDecimal expectedValue = new BigDecimal(300);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     @Test
@@ -68,7 +71,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceRegular);
         BigDecimal expectedValue = new BigDecimal(300);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     @Test
@@ -78,7 +81,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceRegular);
         BigDecimal expectedValue = new BigDecimal(600);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     @Test
@@ -88,7 +91,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceRegular);
         BigDecimal expectedValue = new BigDecimal(1050);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     @Test
@@ -98,7 +101,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceVip);
         BigDecimal expectedValue = new BigDecimal(0);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     @Test
@@ -108,7 +111,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceVip);
         BigDecimal expectedValue = new BigDecimal(0);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     //60 minutes means that the client has just started second hour due to the invoke time
@@ -119,7 +122,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceVip);
         BigDecimal expectedValue = new BigDecimal(0);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     //60 minutes means that the client has just started second hour due to the invoke time
@@ -130,7 +133,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceVip);
         BigDecimal expectedValue = new BigDecimal(200);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     @Test
@@ -140,7 +143,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceVip);
         BigDecimal expectedValue = new BigDecimal(200);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     @Test
@@ -150,7 +153,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceVip);
         BigDecimal expectedValue = new BigDecimal(440);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     @Test
@@ -160,7 +163,7 @@ public class TicketTest {
         Ticket ticket = new Ticket(0, parkPlaceVip);
         BigDecimal expectedValue = new BigDecimal(728);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     @Test
@@ -168,17 +171,17 @@ public class TicketTest {
 
         parkPlaceRegular.doReservation("testCarRegular", LocalDateTime.now().minusMinutes(90));
         Ticket ticket = new Ticket(0, parkPlaceRegular);
-        Assert.assertNull(ticket.getReservedTo());
+        assertNull(ticket.getReservedTo());
         BigDecimal expectedValue = new BigDecimal(300);
         BigDecimal result = ticket.calculateTicketFee(LocalDateTime.now());
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
 
         LocalDateTime currentDateTime = LocalDateTime.now();
         ticket.updateTicketData(currentDateTime, new BigDecimal(3223), "test payment");
-        Assert.assertEquals(currentDateTime, ticket.getReservedTo());
+        assertEquals(currentDateTime, ticket.getReservedTo());
         expectedValue = new BigDecimal(3223);
         result = ticket.getTicketFee();
-        Assert.assertTrue(expectedValue.doubleValue() == result.doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.doubleValue());
     }
 
     @Test
@@ -188,13 +191,13 @@ public class TicketTest {
         String message = "test message";
         ticket.generateEmptyTicketWithMessage(message);
 
-        Assert.assertEquals(-1, ticket.getTicketNumber());
-        Assert.assertNull(ticket.getParkPlace());
-        Assert.assertNull(ticket.getReservedTo());
-        Assert.assertNull(ticket.getTicketFee());
+        assertEquals(-1, ticket.getTicketNumber());
+        assertNull(ticket.getParkPlace());
+        assertNull(ticket.getReservedTo());
+        assertNull(ticket.getTicketFee());
 
-        Assert.assertNull(ticket.calculateTicketFee(LocalDateTime.now()));
-        Assert.assertEquals(message, ticket.getTicketMessage());
+        assertNull(ticket.calculateTicketFee(LocalDateTime.now()));
+        assertEquals(message, ticket.getTicketMessage());
     }
 
 }

@@ -50,8 +50,9 @@ and "healthCheck"
 http://localhost:8080/carpark/hello
 ```
 
-I have added very simple car registration number validator - length of the string
-has to be lower than 15. More about car registration number can be found here: 
+I have added very simple car registration number validator - in fact it is almost 
+mock of the validator - the length of the string has to be lower than 15. 
+More about car registration numbers over the world can be found here: 
 ```
 https://www.zpp.pl/storage/files/2017-04//535bcf66c5a7d0ca1d1484fc95573c864140.pdf
 ```

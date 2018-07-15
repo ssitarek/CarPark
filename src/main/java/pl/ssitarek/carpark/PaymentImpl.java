@@ -4,7 +4,10 @@ import java.math.BigDecimal;
 
 public class PaymentImpl implements Payment {
 
+    private final BigDecimal ONE_HUNDERED = new BigDecimal(100);
     private boolean isOk;
+    AcceptedCurrency paymentCurrency;
+    BigDecimal paymentValue;
 
     @Override
     public boolean checkPaymentStatus() {
@@ -14,9 +17,16 @@ public class PaymentImpl implements Payment {
     @Override
     public void doPayment(BigDecimal fee, AcceptedCurrency acceptedCurrency, boolean paymentOk) {
 
-        //not necessary line to show how do I imagine payment in different currency
-        BigDecimal payInCurrency = fee.divide(acceptedCurrency.getValue());
-
+        paymentCurrency = acceptedCurrency;
+        paymentValue = fee.multiply(ONE_HUNDERED).divide(acceptedCurrency.getValue(), 2, BigDecimal.ROUND_UP);
         isOk = paymentOk;
+    }
+
+    public AcceptedCurrency getPaymentCurrency() {
+        return paymentCurrency;
+    }
+
+    public BigDecimal getPaymentValue() {
+        return paymentValue;
     }
 }

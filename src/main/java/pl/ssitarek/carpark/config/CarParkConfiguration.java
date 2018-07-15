@@ -1,6 +1,5 @@
 package pl.ssitarek.carpark.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,9 +21,6 @@ public class CarParkConfiguration {
     @Value("${carParkAddress}")
     private String address;
 
-    @Autowired
-    CarParkParameter carParkParameter;
-
     @Bean
     public CarParkParameter carParkParameter() {
 
@@ -35,7 +31,7 @@ public class CarParkConfiguration {
     }
 
     @Bean
-    public ParkingImpl parkingImpl() {
+    public ParkingImpl parkingImpl(CarParkParameter carParkParameter) {
 
         ParkingImpl parkingImpl = new ParkingImpl();
         parkingImpl.setCarParkParameter(carParkParameter);

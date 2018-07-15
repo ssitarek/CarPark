@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import pl.ssitarek.carpark.config.data.CarParkParameter;
 import pl.ssitarek.carpark.config.data.ErrorsAndMessages;
@@ -16,13 +15,15 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ParkingImpl.class)
-@TestPropertySource(locations = "classpath:test.properties")
 public class ParkingImplTestIntegr {
 
-    @Autowired
-    CarParkParameter carParkParameter;
+    CarParkParameter carParkParameter = new CarParkParameter(5, 3);
 
     @Autowired
     ParkingImpl parkingImplForTests;
@@ -37,17 +38,17 @@ public class ParkingImplTestIntegr {
 
         Ticket ticket = parkingImplForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
 
-        Assert.assertEquals(0, ticket.getTicketNumber());
-        Assert.assertEquals("carRegular", ticket.getParkPlace().getCarRegistryNumber());
-        Assert.assertEquals(ParkPlaceType.REGULAR, ticket.getParkPlace().getPlaceType());
-        Assert.assertEquals(1000, ticket.getParkPlace().getPlaceNumber());
+        assertEquals(0, ticket.getTicketNumber());
+        assertEquals("carRegular", ticket.getParkPlace().getCarRegistryNumber());
+        assertEquals(ParkPlaceType.REGULAR, ticket.getParkPlace().getPlaceType());
+        assertEquals(1000, ticket.getParkPlace().getPlaceNumber());
 
         Duration duration = Duration.between(LocalDateTime.now(), ticket.getParkPlace().getReservedFrom());
         long occupancyTime = Math.abs(duration.toMinutes());
-        Assert.assertTrue(occupancyTime < 1);
+        assertTrue(occupancyTime < 1);
 
-        Assert.assertNull(ticket.getReservedTo());
-        Assert.assertEquals("", ticket.getTicketMessage());
+        assertNull(ticket.getReservedTo());
+        assertEquals("", ticket.getTicketMessage());
     }
 
     @Test
@@ -56,8 +57,8 @@ public class ParkingImplTestIntegr {
         Ticket ticket1 = parkingImplForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
         Ticket ticket2 = parkingImplForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
 
-        Assert.assertEquals("", ticket1.getTicketMessage());
-        Assert.assertEquals(ErrorsAndMessages.ERROR_RESERVATION, ticket2.getTicketMessage());
+        assertEquals("", ticket1.getTicketMessage());
+        assertEquals(ErrorsAndMessages.ERROR_RESERVATION, ticket2.getTicketMessage());
     }
 
     @Test
@@ -65,17 +66,17 @@ public class ParkingImplTestIntegr {
 
         Ticket ticket = parkingImplForTests.startParkAndGetTicket("carVip", ParkPlaceType.VIP, LocalDateTime.now());
 
-        Assert.assertEquals(0, ticket.getTicketNumber());
-        Assert.assertEquals("carVip", ticket.getParkPlace().getCarRegistryNumber());
-        Assert.assertEquals(ParkPlaceType.VIP, ticket.getParkPlace().getPlaceType());
-        Assert.assertEquals(2000, ticket.getParkPlace().getPlaceNumber());
+        assertEquals(0, ticket.getTicketNumber());
+        assertEquals("carVip", ticket.getParkPlace().getCarRegistryNumber());
+        assertEquals(ParkPlaceType.VIP, ticket.getParkPlace().getPlaceType());
+        assertEquals(2000, ticket.getParkPlace().getPlaceNumber());
 
         Duration duration = Duration.between(LocalDateTime.now(), ticket.getParkPlace().getReservedFrom());
         long occupancyTime = Math.abs(duration.toMinutes());
-        Assert.assertTrue(occupancyTime < 1);
+        assertTrue(occupancyTime < 1);
 
-        Assert.assertNull(ticket.getReservedTo());
-        Assert.assertEquals("", ticket.getTicketMessage());
+        assertNull(ticket.getReservedTo());
+        assertEquals("", ticket.getTicketMessage());
     }
 
     @Test
@@ -86,17 +87,17 @@ public class ParkingImplTestIntegr {
             ticket = parkingImplForTests.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(10));
         }
 
-        Assert.assertEquals(2, ticket.getTicketNumber());
-        Assert.assertEquals("carRegular2", ticket.getParkPlace().getCarRegistryNumber());
-        Assert.assertEquals(ParkPlaceType.REGULAR, ticket.getParkPlace().getPlaceType());
-        Assert.assertEquals(1002, ticket.getParkPlace().getPlaceNumber());
+        assertEquals(2, ticket.getTicketNumber());
+        assertEquals("carRegular2", ticket.getParkPlace().getCarRegistryNumber());
+        assertEquals(ParkPlaceType.REGULAR, ticket.getParkPlace().getPlaceType());
+        assertEquals(1002, ticket.getParkPlace().getPlaceNumber());
 
         Duration duration = Duration.between(LocalDateTime.now(), ticket.getParkPlace().getReservedFrom());
         long occupancyTime = Math.abs(duration.toMinutes());
-        Assert.assertTrue(occupancyTime >= 10);
+        assertTrue(occupancyTime >= 10);
 
-        Assert.assertNull(ticket.getReservedTo());
-        Assert.assertEquals("", ticket.getTicketMessage());
+        assertNull(ticket.getReservedTo());
+        assertEquals("", ticket.getTicketMessage());
     }
 
     @Test
@@ -107,10 +108,10 @@ public class ParkingImplTestIntegr {
             ticket = parkingImplForTests.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now());
         }
 
-        Assert.assertEquals(0, ticket.getTicketNumber());
-        Assert.assertNull(ticket.getParkPlace());
-        Assert.assertNull(ticket.getReservedTo());
-        Assert.assertEquals(ErrorsAndMessages.ERROR_NO_EMPTY_PLACES, ticket.getTicketMessage());
+        assertEquals(-1, ticket.getTicketNumber());
+        assertNull(ticket.getParkPlace());
+        assertNull(ticket.getReservedTo());
+        assertEquals(ErrorsAndMessages.ERROR_NO_EMPTY_PLACES, ticket.getTicketMessage());
     }
 
     @Test
@@ -119,8 +120,8 @@ public class ParkingImplTestIntegr {
         for (int i = 0; i < 2; i++) {
             parkingImplForTests.startParkAndGetTicket("carVip" + i, ParkPlaceType.VIP, LocalDateTime.now());
         }
-        Assert.assertTrue(parkingImplForTests.checkIfVehicleStartedParking("carVip0"));
-        Assert.assertTrue(!parkingImplForTests.checkIfVehicleStartedParking("carReg0"));
+        assertTrue(parkingImplForTests.checkIfVehicleStartedParking("carVip0"));
+        assertTrue(!parkingImplForTests.checkIfVehicleStartedParking("carReg0"));
     }
 
     @Test
@@ -129,7 +130,7 @@ public class ParkingImplTestIntegr {
         parkingImplForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
         AcceptedCurrency acceptedCurrency = AcceptedCurrency.PLN;
         Ticket ticket = parkingImplForTests.stopPark(0, LocalDateTime.now(), acceptedCurrency);
-        Assert.assertTrue(ticket.getTicketMessage().equals(ErrorsAndMessages.MESSAGE_FAREWELL));
+        assertTrue(ticket.getTicketMessage().equals(ErrorsAndMessages.MESSAGE_FAREWELL));
     }
 
     @Test
@@ -138,7 +139,7 @@ public class ParkingImplTestIntegr {
         parkingImplForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now());
         AcceptedCurrency acceptedCurrency = AcceptedCurrency.PLN;
         Ticket ticket = parkingImplForTests.stopPark(10, LocalDateTime.now(), acceptedCurrency);
-        Assert.assertTrue(ticket.getTicketMessage().equals(ErrorsAndMessages.ERROR_TICKET_NOT_FOUND));
+        assertTrue(ticket.getTicketMessage().equals(ErrorsAndMessages.ERROR_TICKET_NOT_FOUND));
     }
 
     @Test
@@ -146,14 +147,14 @@ public class ParkingImplTestIntegr {
 
         parkingImplForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(65));
         BigDecimal expectedValue = new BigDecimal(300);
-        Assert.assertEquals(expectedValue, parkingImplForTests.calculateFee(0, LocalDateTime.now()));
+        assertEquals(expectedValue, parkingImplForTests.calculateFee(0, LocalDateTime.now()));
     }
 
     @Test
     public void calculateFeeForNonExistingTicket() {
 
         parkingImplForTests.startParkAndGetTicket("carRegular", ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(65));
-        Assert.assertNull(parkingImplForTests.calculateFee(100, LocalDateTime.now()));
+        assertNull(parkingImplForTests.calculateFee(100, LocalDateTime.now()));
     }
 
     @Test
@@ -168,7 +169,7 @@ public class ParkingImplTestIntegr {
         String date = TimeToStringConversions.doConversion(LocalDateTime.now());
         BigDecimal expectedValue = new BigDecimal(1300);
         Map<AcceptedCurrency, BigDecimal> result = parkingImplForTests.getDailyIncomeForSingleDate(date);
-        Assert.assertTrue(expectedValue.doubleValue() == result.get(acceptedCurrency).doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.get(acceptedCurrency).doubleValue());
     }
 
     @Test
@@ -184,6 +185,6 @@ public class ParkingImplTestIntegr {
         String date = TimeToStringConversions.doConversion(LocalDateTime.now());
         BigDecimal expectedValue = new BigDecimal(1300);
         Map<AcceptedCurrency, BigDecimal> result = parkingImplForTests.getDailyIncomeForSingleDate(date);
-        Assert.assertTrue(expectedValue.doubleValue() == result.get(acceptedCurrency).doubleValue());
+        assertTrue(expectedValue.doubleValue() == result.get(acceptedCurrency).doubleValue());
     }
 }

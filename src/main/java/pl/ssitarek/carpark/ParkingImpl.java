@@ -68,6 +68,7 @@ public class ParkingImpl implements Parking {
     @Override
     public Ticket stopPark(int ticketNumber, LocalDateTime currentDateTime, AcceptedCurrency acceptedCurrency) {
 
+        //get ticket number
         Ticket ticket = carParkParameter.getCurrentTicketsMap().get(ticketNumber);
         if (ticket == null) {
             ticket = new Ticket();
@@ -75,19 +76,22 @@ public class ParkingImpl implements Parking {
             return ticket;
         }
 
-        BigDecimal fee = calculateFee(ticketNumber, currentDateTime);
-        if (fee == null) {
+        //if found calculate fee - always PLN
+        BigDecimal ticketFee = calculateFee(ticketNumber, currentDateTime);
+        if (ticketFee == null) {
             ticket = new Ticket();
             ticket.updateTicketData(null, null, ErrorsAndMessages.ERROR_FEE);
             return ticket;
         }
 
-        carParkParameter.getPayment().doPayment(fee, acceptedCurrency, true);
+        //pay in different currencies
+        carParkParameter.getPayment().doPayment(ticketFee, acceptedCurrency, true);
         boolean isPaymentOk = carParkParameter.getPayment().checkPaymentStatus();
         if (!isPaymentOk) {
-            ticket.updateTicketData(currentDateTime, fee, ErrorsAndMessages.ERROR_PAYMENT);
+            ticket.updateTicketData(currentDateTime, ticketFee, ErrorsAndMessages.ERROR_PAYMENT);
+            return ticket;
         }
-        ticket.updateTicketData(currentDateTime, fee, ErrorsAndMessages.MESSAGE_PAYMENT_OK);
+        ticket.updateTicketData(currentDateTime, ticketFee, ErrorsAndMessages.MESSAGE_PAYMENT_OK);
 
         //prepare to calculate dailyFee
         String workingDay = TimeToStringConversions.doConversion(ticket.getReservedTo());
@@ -95,19 +99,20 @@ public class ParkingImpl implements Parking {
             carParkParameter.getDailyIncomeMap().put(workingDay, prepareEmptyDailyFeeMap());
         }
 
+        //get dailyFeeMap (different currencies) and single fee
         Map<AcceptedCurrency, BigDecimal> mapOfDailyFee = carParkParameter.getDailyIncomeMap().get(workingDay);
         BigDecimal val = mapOfDailyFee.get(acceptedCurrency);
 
         //no possibility to do val+=ticket.getticketFee() due to the fact that it is BigDecimal
-        val = val.add(ticket.getTicketFee());
-        mapOfDailyFee.put(acceptedCurrency, val);
+        val = val.add(carParkParameter.getPayment().getPaymentValue());
+        mapOfDailyFee.put(carParkParameter.getPayment().getPaymentCurrency(), val);
         carParkParameter.getDailyIncomeMap().put(workingDay, mapOfDailyFee);
 
         if (!unDoReserveParkPlace(ticket.getParkPlace())) {
-            ticket.updateTicketData(currentDateTime, fee, ErrorsAndMessages.ERROR_UNDO_RESERVATION);
+            ticket.updateTicketData(currentDateTime, ticketFee, ErrorsAndMessages.ERROR_UNDO_RESERVATION);
         }
 
-        ticket.updateTicketData(currentDateTime, fee, ErrorsAndMessages.MESSAGE_FAREWELL);
+        ticket.updateTicketData(currentDateTime, ticketFee, ErrorsAndMessages.MESSAGE_FAREWELL);
         carParkParameter.getCurrentTicketsMap().remove(ticket.getTicketNumber());
         return ticket;
     }
@@ -120,7 +125,7 @@ public class ParkingImpl implements Parking {
 
     public static Map<AcceptedCurrency, BigDecimal> prepareEmptyDailyFeeMap() {
         Map<AcceptedCurrency, BigDecimal> singleDayFee = new HashMap<>();
-        for (AcceptedCurrency acceptedCurrency: AcceptedCurrency.values()){
+        for (AcceptedCurrency acceptedCurrency : AcceptedCurrency.values()) {
             singleDayFee.put(acceptedCurrency, new BigDecimal(0));
         }
         return singleDayFee;
@@ -141,16 +146,13 @@ public class ParkingImpl implements Parking {
 
         ParkPlaceType[] parkPlaceTypes = ParkPlaceType.values();
         //check every type of parkPlace (REGULAR or VIP)
+        boolean startedParking=false;
         for (int i = 0; i < carParkParameter.getParkPlaceTypeListMap().size(); i++) {
             List<ParkPlace> tmpList = carParkParameter.getParkPlaceTypeListMap().get(parkPlaceTypes[i]);
             //check every parkPlace in the particular list (list of REGULAR or list of VIP)
-            for (int j = 0; j < tmpList.size(); j++) {
-                if (carRegistryNumber.equals(tmpList.get(j).getCarRegistryNumber())) {
-                    return true;
-                }
-            }
+            startedParking = startedParking || tmpList.stream().anyMatch(n -> carRegistryNumber.equals(n.getCarRegistryNumber()));
         }
-        return false;
+        return startedParking;
     }
 
     private boolean carRegistryValidator(String carRegistryNumber) {

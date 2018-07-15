@@ -3,6 +3,7 @@ package pl.ssitarek.carpark;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Optional;
 
 public class Ticket {

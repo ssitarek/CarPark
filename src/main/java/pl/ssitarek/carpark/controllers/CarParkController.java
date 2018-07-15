@@ -27,6 +27,7 @@ public class CarParkController {
 
     /**
      * welcome information
+     *
      * @return string with welcome and car park data
      * query example: http://localhost:8080/carpark
      */
@@ -38,6 +39,7 @@ public class CarParkController {
 
     /**
      * simple health check with car park data
+     *
      * @return string with car park data
      * query example: http://localhost:8080/carpark/healthcheck
      */
@@ -133,17 +135,19 @@ public class CarParkController {
         BigDecimal feeValue = Optional.ofNullable(parkingImpl.calculateFee(ticketNumber, LocalDateTime.now()))
                                       .orElse(noFee);
         //divide by 100 to obtain x.xx PLN
-        return feeValue.divide(CONVERT_FROM_CENT).toString();
+        return feeValue.divide(CONVERT_FROM_CENT, 2, BigDecimal.ROUND_UP).toString();
     }
 
 
     /**
      * UserStory05:
      * I want to know how much I have to pay for parking.
+     *
      * @param dayString yyyyMMdd e.g. 20180725
      * @return map of all acceptedCurrency income
      * <p>
      * query example: http://localhost:8080/carpark/getDailyIncome?day=20180712
+     * !!!! IMPORTANT !!!! change the day string to current before use this query example
      */
     @RequestMapping("/getDailyIncome")
     public String getDailyIncomeFromCarPark(
@@ -152,11 +156,20 @@ public class CarParkController {
 
         Map<AcceptedCurrency, BigDecimal> result = Optional.ofNullable(parkingImpl.getDailyIncomeForSingleDate(dayString))
                                                            .orElse(parkingImpl.prepareEmptyDailyFeeMap());
-        //divide by 100 to obtain x.xx PLN, y.yy EUR ...
-        for (Map.Entry<AcceptedCurrency, BigDecimal> entry : result.entrySet()) {
+        // divide by 100 to obtain x.xx PLN, y.yy EUR ...
+        return fillDailyFeeMapData(result).toString();
+    }
+
+    private Map<AcceptedCurrency, BigDecimal> fillDailyFeeMapData(Map<AcceptedCurrency, BigDecimal> bigDecimalMap) {
+
+        Map<AcceptedCurrency, BigDecimal> result = parkingImpl.prepareEmptyDailyFeeMap();
+
+        //I cannot to
+        for (Map.Entry<AcceptedCurrency, BigDecimal> entry : bigDecimalMap.entrySet()) {
+            AcceptedCurrency key = entry.getKey();
             BigDecimal value = entry.getValue();
-            entry.setValue(value.divide(CONVERT_FROM_CENT));
+            result.put(key, value.divide(CONVERT_FROM_CENT, 2, BigDecimal.ROUND_UP));
         }
-        return result.toString();
+        return result;
     }
 }
