@@ -7,8 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class CarparkApplication {
 
     public static void main(String[] args) {
-
         SpringApplication.run(CarparkApplication.class, args);
-
     }
 }
