@@ -14,23 +14,19 @@ public class Ticket {
     private BigDecimal ticketFee;
     private String ticketMessage;
 
-    public Ticket() {
-    }
-
-
-    public Ticket(int ticketNumber, ParkPlace parkPlace) {
-
-        this.ticketNumber = ticketNumber;
-        this.parkPlace = parkPlace;
-        reservedTo = null;
-        ticketFee = null;
-        ticketMessage = "";
-    }
-
-    public void generateEmptyTicketWithMessage(String message) {
+    public Ticket(String message) {
 
         ticketNumber = -1;
         parkPlace = null;
+        reservedTo = null;
+        ticketFee = null;
+        ticketMessage = message;
+    }
+
+    public Ticket(int ticketNumber, ParkPlace parkPlace, String message) {
+
+        this.ticketNumber = ticketNumber;
+        this.parkPlace = parkPlace;
         reservedTo = null;
         ticketFee = null;
         ticketMessage = message;
@@ -52,7 +48,7 @@ public class Ticket {
                 .orElse(new ParkPlace(0, ParkPlaceType.REGULAR));
         BigDecimal ticketFeeForString = Optional
                 .ofNullable(ticketFee)
-                .orElse(new BigDecimal(0.0));
+                .orElse(BigDecimal.ZERO);
 
         //display
         return "Ticket{" +
@@ -80,7 +76,7 @@ public class Ticket {
         long occupancyTime = Math.abs(duration.toHours());
         BigDecimal[] priceTable = generatePriceListTable((int)occupancyTime);
 
-        BigDecimal fee = new BigDecimal(0.0);
+        BigDecimal fee = BigDecimal.ZERO;
         for (BigDecimal price : priceTable) {
             fee = fee.add(price);
         }

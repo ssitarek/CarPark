@@ -27,11 +27,10 @@ public class ParkingImplTest {
 
     private CarParkParameter carParkParameter = mock(CarParkParameter.class);
 
-    private ParkingImpl parkingImpl;
+    private ParkingImpl parkingImpl = new ParkingImpl();
 
     @Before
     public void setUp() {
-        parkingImpl = new ParkingImpl();
         parkingImpl.setCarParkParameter(carParkParameter);
     }
 
@@ -44,10 +43,10 @@ public class ParkingImplTest {
         String dateString = TimeToStringConversions.doConversion(CURRENT_DATE_TIME);
         Map<AcceptedCurrency, BigDecimal> singleDayFee = parkingImpl.getDailyIncomeForSingleDate(dateString);
         assertEquals(new BigDecimal(400), singleDayFee.get(AcceptedCurrency.PLN));
-        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.EUR));
-        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.USD));
-        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.GPB));
-        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.CHF));
+        assertEquals(BigDecimal.ZERO, singleDayFee.get(AcceptedCurrency.EUR));
+        assertEquals(BigDecimal.ZERO, singleDayFee.get(AcceptedCurrency.USD));
+        assertEquals(BigDecimal.ZERO, singleDayFee.get(AcceptedCurrency.GPB));
+        assertEquals(BigDecimal.ZERO, singleDayFee.get(AcceptedCurrency.CHF));
     }
 
     @Test
@@ -58,11 +57,11 @@ public class ParkingImplTest {
 
         String dateString = TimeToStringConversions.doConversion(CURRENT_DATE_TIME.minusDays(1));
         Map<AcceptedCurrency, BigDecimal> singleDayFee = parkingImpl.getDailyIncomeForSingleDate(dateString);
-        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.PLN));
-        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.EUR));
-        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.USD));
-        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.GPB));
-        assertEquals(new BigDecimal(0), singleDayFee.get(AcceptedCurrency.CHF));
+        assertEquals(BigDecimal.ZERO, singleDayFee.get(AcceptedCurrency.PLN));
+        assertEquals(BigDecimal.ZERO, singleDayFee.get(AcceptedCurrency.EUR));
+        assertEquals(BigDecimal.ZERO, singleDayFee.get(AcceptedCurrency.USD));
+        assertEquals(BigDecimal.ZERO, singleDayFee.get(AcceptedCurrency.GPB));
+        assertEquals(BigDecimal.ZERO, singleDayFee.get(AcceptedCurrency.CHF));
     }
 
     @Test
@@ -156,7 +155,7 @@ public class ParkingImplTest {
 
         CarParkParameter fakeCarParkParameter;
 
-        public FakeCarParkForTest() {
+        private FakeCarParkForTest() {
 
             fakeCarParkParameter = new CarParkParameter(5, 3);
             fillWithFakeData(fakeCarParkParameter);
@@ -180,7 +179,7 @@ public class ParkingImplTest {
                 parkPlace.doReservation("FakeCar00" + i, CURRENT_DATE_TIME.minusMinutes(75 - 10 * i));
 
                 //generate ticket
-                Ticket ticket = new Ticket(i, parkPlace);
+                Ticket ticket = new Ticket(i, parkPlace, "");
                 params.getCurrentTicketsMap().put(i, ticket);
                 params.setLastTicketNumber(ticket.getTicketNumber());
 

@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 public class ParkPlace {
 
     private int placeNumber;
-    private boolean isEmpty;
+    private boolean isEmpty = true;
     private LocalDateTime reservedFrom = null;
     private String carRegistryNumber = "";
     private ParkPlaceType placeType;
@@ -15,7 +15,6 @@ public class ParkPlace {
 
     public ParkPlace(int number, ParkPlaceType placeType) {
         this.placeNumber = number;
-        this.isEmpty = true;
         this.placeType = placeType;
         this.parkPlaceFeeData = createFeeData(placeType);
     }
@@ -26,9 +25,10 @@ public class ParkPlace {
             case REGULAR:
                 return new ParkPlaceFee(new BigDecimal(100.0), new BigDecimal(200.0), 1.5);
             case VIP:
-                return new ParkPlaceFee(new BigDecimal(0.0), new BigDecimal(200.0), 1.2);
+                return new ParkPlaceFee(BigDecimal.ZERO, new BigDecimal(200.0), 1.2);
+            default:
+                return new ParkPlaceFee(new BigDecimal(100.0), new BigDecimal(200.0), 1.5);
         }
-        return null;
     }
 
 
@@ -68,5 +68,9 @@ public class ParkPlace {
 
     public String getCarRegistryNumber() {
         return carRegistryNumber;
+    }
+
+    public void setPlaceNumber(int placeNumber) {
+        this.placeNumber = placeNumber;
     }
 }

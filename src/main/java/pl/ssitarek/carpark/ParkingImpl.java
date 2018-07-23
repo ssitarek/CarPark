@@ -15,10 +15,6 @@ public class ParkingImpl implements Parking {
 
     private CarParkParameter carParkParameter;
 
-    public ParkingImpl() {
-
-    }
-
     @Override
     public String toString() {
         return "Parking{" +
@@ -39,7 +35,7 @@ public class ParkingImpl implements Parking {
     @Override
     public Map<AcceptedCurrency, BigDecimal> getDailyIncomeForSingleDate(String dateString) {
 
-        return carParkParameter.getDailyIncomeMap().get(dateString);//Optional.ofNullable(dailyFeeMap.get(date)).orElse(new BigDecimal(0.0));
+        return carParkParameter.getDailyIncomeMap().get(dateString);
     }
 
     /**
@@ -71,17 +67,13 @@ public class ParkingImpl implements Parking {
         //get ticket number
         Ticket ticket = carParkParameter.getCurrentTicketsMap().get(ticketNumber);
         if (ticket == null) {
-            ticket = new Ticket();
-            ticket.updateTicketData(null, null, ErrorsAndMessages.ERROR_TICKET_NOT_FOUND);
-            return ticket;
+            return new Ticket(ErrorsAndMessages.ERROR_TICKET_NOT_FOUND);
         }
 
         //if found calculate fee - always PLN
         BigDecimal ticketFee = calculateFee(ticketNumber, currentDateTime);
         if (ticketFee == null) {
-            ticket = new Ticket();
-            ticket.updateTicketData(null, null, ErrorsAndMessages.ERROR_FEE);
-            return ticket;
+            return new Ticket(ErrorsAndMessages.ERROR_FEE);
         }
 
         //pay in different currencies
@@ -146,7 +138,7 @@ public class ParkingImpl implements Parking {
 
         ParkPlaceType[] parkPlaceTypes = ParkPlaceType.values();
         //check every type of parkPlace (REGULAR or VIP)
-        boolean startedParking=false;
+        boolean startedParking = false;
         for (int i = 0; i < carParkParameter.getParkPlaceTypeListMap().size(); i++) {
             List<ParkPlace> tmpList = carParkParameter.getParkPlaceTypeListMap().get(parkPlaceTypes[i]);
             //check every parkPlace in the particular list (list of REGULAR or list of VIP)
@@ -157,10 +149,7 @@ public class ParkingImpl implements Parking {
 
     private boolean carRegistryValidator(String carRegistryNumber) {
 
-        if ((carRegistryNumber.length() == 0) || (carRegistryNumber.length() > 15)) {
-            return false;
-        }
-        return true;
+        return (carRegistryNumber.length() > 0 && carRegistryNumber.length() < 15);
     }
 
 
@@ -175,39 +164,25 @@ public class ParkingImpl implements Parking {
     public Ticket startParkAndGetTicket(String carRegistrationNumber, ParkPlaceType parkPlaceType, LocalDateTime currentDateTime) {
 
         if (!carRegistryValidator(carRegistrationNumber)) {
-            Ticket ticket = new Ticket();
-            ticket.generateEmptyTicketWithMessage(ErrorsAndMessages.ERROR_INVALID_REGISTRY_NUMBER);
-            return ticket;
+            return new Ticket(ErrorsAndMessages.ERROR_INVALID_REGISTRY_NUMBER);
         }
 
         int emptyPlaceNumber = getEmptyPlaceNumber(parkPlaceType);
         if (emptyPlaceNumber == -1) {
-            Ticket ticket = new Ticket();
-            ticket.generateEmptyTicketWithMessage(ErrorsAndMessages.ERROR_NO_EMPTY_PLACES);
-            return ticket;
+            return new Ticket(ErrorsAndMessages.ERROR_NO_EMPTY_PLACES);
         }
 
         boolean isReservationOk = doReserveParkPlace(parkPlaceType, emptyPlaceNumber, carRegistrationNumber, currentDateTime);
         if (!isReservationOk) {
-            Ticket ticket = new Ticket();
-            ticket.generateEmptyTicketWithMessage(ErrorsAndMessages.ERROR_RESERVATION);
-            return ticket;
+            return new Ticket(ErrorsAndMessages.ERROR_RESERVATION);
         }
 
         int ticketNumber = generateTicketNumber();
-        Ticket ticket = generateTicket(ticketNumber, carParkParameter.getParkPlaceTypeListMap().get(parkPlaceType).get(emptyPlaceNumber));
+        Ticket ticket = new Ticket(ticketNumber, carParkParameter.getParkPlaceTypeListMap().get(parkPlaceType).get(emptyPlaceNumber), "");
         carParkParameter.getCurrentTicketsMap().put(ticketNumber, ticket);
         carParkParameter.setLastTicketNumber(ticketNumber);
         return ticket;
     }
-
-
-    private Ticket generateTicket(int ticketNumber, ParkPlace parkPlace) {
-
-        Ticket ticket = new Ticket(ticketNumber, parkPlace);
-        return ticket;
-    }
-
 
     private boolean doReserveParkPlace(ParkPlaceType parkPlaceType, int emptyPlaceNumber, String carRegistryNumber, LocalDateTime localDateTime) {
 
@@ -229,8 +204,7 @@ public class ParkingImpl implements Parking {
 
     private int generateTicketNumber() {
 
-        int ticketNumber = carParkParameter.getLastTicketNumber() + 1;
-        return ticketNumber;
+        return carParkParameter.getLastTicketNumber() + 1;
     }
 
     private int getEmptyPlaceNumber(ParkPlaceType parkPlaceType) {

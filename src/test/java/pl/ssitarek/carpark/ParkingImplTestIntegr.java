@@ -82,7 +82,7 @@ public class ParkingImplTestIntegr {
     @Test
     public void startParkMultipleCars() {
 
-        Ticket ticket = new Ticket();
+        Ticket ticket = new Ticket("");
         for (int i = 0; i < 3; i++) {
             ticket = parkingImplForTests.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now().minusMinutes(10));
         }
@@ -103,7 +103,7 @@ public class ParkingImplTestIntegr {
     @Test
     public void noEmptyParkPlaces() {
 
-        Ticket ticket = new Ticket();
+        Ticket ticket = new Ticket("");
         for (int i = 0; i < 6; i++) {
             ticket = parkingImplForTests.startParkAndGetTicket("carRegular" + i, ParkPlaceType.REGULAR, LocalDateTime.now());
         }

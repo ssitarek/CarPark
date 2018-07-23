@@ -8,4 +8,7 @@ public interface Payment {
 
     void doPayment(BigDecimal fee, AcceptedCurrency acceptedCurrency, boolean paymentOk);
 
+    AcceptedCurrency getPaymentCurrency();
+
+    BigDecimal getPaymentValue();
 }

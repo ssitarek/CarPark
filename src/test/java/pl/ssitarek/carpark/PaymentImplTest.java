@@ -3,6 +3,7 @@ package pl.ssitarek.carpark;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.math.BigDecimal;
 
@@ -11,18 +12,11 @@ import static org.junit.Assert.assertEquals;
 public class PaymentImplTest {
 
     private final int DIFF_IN_CENT = 1;
-    private PaymentImpl payment;
-    private BigDecimal toPay;
+    private Payment payment = new PaymentImpl();
+    private BigDecimal toPay= new BigDecimal(100);
 
-    @Before
-    public void setUp() {
-        payment = new PaymentImpl();
-        toPay = new BigDecimal(100);
-    }
-
-    // names should be camelCase but PLN, USD is a name of currency
     @Test
-    public void testPaymentPLN() {
+    public void testPaymentPln() {
 
         AcceptedCurrency acceptedCurrency = AcceptedCurrency.PLN;
         payment.doPayment(toPay, acceptedCurrency, true);
@@ -32,7 +26,7 @@ public class PaymentImplTest {
     }
 
     @Test
-    public void testPaymentUSD() {
+    public void testPaymentUsd() {
 
         AcceptedCurrency acceptedCurrency = AcceptedCurrency.EUR;
         payment.doPayment(toPay, acceptedCurrency, true);
@@ -42,7 +36,7 @@ public class PaymentImplTest {
     }
 
     @Test
-    public void testPaymentGPB() {
+    public void testPaymentGpb() {
 
         AcceptedCurrency acceptedCurrency = AcceptedCurrency.GPB;
         payment.doPayment(toPay, acceptedCurrency, true);
@@ -51,14 +45,21 @@ public class PaymentImplTest {
         assertEquals(true, payment.checkPaymentStatus());
     }
 
-    @Ignore("some strange behaviour, OK if you run this test class only, errors in case of maven build")
     @Test
-    public void testPaymentCHF() {
+    public void testPaymentChf() {
 
         AcceptedCurrency acceptedCurrency = AcceptedCurrency.CHF;
         payment.doPayment(toPay, acceptedCurrency, true);
-        assertEquals(new BigDecimal(25).doubleValue(), payment.getPaymentValue().doubleValue(), DIFF_IN_CENT);
+
+        BigDecimal paymentValue = payment.getPaymentValue();
+        BigDecimal expectedValue = new BigDecimal(25);
+        System.out.println(expectedValue.doubleValue());
+        System.out.println(paymentValue.doubleValue());
+        System.out.println(payment.getPaymentCurrency().getValue());
+        System.out.println(payment.getPaymentCurrency());
+
         assertEquals(AcceptedCurrency.CHF, payment.getPaymentCurrency());
         assertEquals(true, payment.checkPaymentStatus());
+        assertEquals(new BigDecimal(25).doubleValue(), payment.getPaymentValue().doubleValue(), DIFF_IN_CENT);
     }
 }

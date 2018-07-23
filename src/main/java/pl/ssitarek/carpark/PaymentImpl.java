@@ -6,8 +6,8 @@ public class PaymentImpl implements Payment {
 
     private final BigDecimal ONE_HUNDERED = new BigDecimal(100);
     private boolean isOk;
-    AcceptedCurrency paymentCurrency;
-    BigDecimal paymentValue;
+    private AcceptedCurrency paymentCurrency;
+    private BigDecimal paymentValue;
 
     @Override
     public boolean checkPaymentStatus() {
@@ -22,10 +22,12 @@ public class PaymentImpl implements Payment {
         isOk = paymentOk;
     }
 
+    @Override
     public AcceptedCurrency getPaymentCurrency() {
         return paymentCurrency;
     }
 
+    @Override
     public BigDecimal getPaymentValue() {
         return paymentValue;
     }

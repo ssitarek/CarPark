@@ -53,6 +53,18 @@ public class CarParkParameter {
             parkPlaces.add(new ParkPlace(parkPlaceType.getValue() + i, parkPlaceType));
         }
         return parkPlaces;
+
+//        List<ParkPlace> parkPlaces = new ArrayList<>(Collections.nCopies(numberOfPlaces, new ParkPlace(parkPlaceType.getValue(), parkPlaceType)));
+//        return parkPlaces.stream().map(n-> n.setPlaceNumber(n.getPlaceNumber())).forEach();
+
+//        int counter = -1;
+//        Stream<ParkPlace> stream = Stream.generate(() -> {
+//            counter++;
+//            new ParkPlace(parkPlaceType.getValue() + counter, parkPlaceType);
+//        }).limit(numberOfPlaces);
+//        List<ParkPlace> tmpList = stream.collect(Collectors.toList());
+//        return (List<ParkPlace>)stream;
+//        return parkPlaces1;
     }
 
     public int getNumberOfPlaces() {

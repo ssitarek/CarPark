@@ -16,6 +16,8 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+
 @RestController
 @RequestMapping("/carpark")
 public class CarParkController {
@@ -61,8 +63,8 @@ public class CarParkController {
      * query example: http://localhost:8080/carpark/startPark?number=AB 12345&type=regular
      * query example: http://localhost:8080/carpark/startPark?number=AB 12345&type=vip
      */
-    @RequestMapping("/startPark")
-    public String startParkTheCar(
+    @RequestMapping(value = "/startPark", method = GET)
+    public Ticket startParkTheCar(
             @RequestParam("number") String carRegistrationNumber,
             @RequestParam(value = "type", defaultValue = "regular") String parkPlaceTypeStr
     ) {
@@ -71,12 +73,9 @@ public class CarParkController {
         try {
             parkPlaceType = ParkPlaceType.valueOf(parkPlaceTypeStr.toUpperCase());
         } catch (IllegalArgumentException ex) {
-            Ticket ticket = new Ticket();
-            ticket.updateTicketData(null, null, ErrorsAndMessages.ERROR_RESERVATION);
-            return ticket.toString();
+            return new Ticket(ErrorsAndMessages.ERROR_RESERVATION);
         }
-        Ticket ticket = parkingImpl.startParkAndGetTicket(carRegistrationNumber.toUpperCase(), parkPlaceType, LocalDateTime.now());
-        return ticket.toString();
+        return parkingImpl.startParkAndGetTicket(carRegistrationNumber.toUpperCase(), parkPlaceType, LocalDateTime.now());
     }
 
 
@@ -89,12 +88,11 @@ public class CarParkController {
      * query example: http://localhost:8080/carpark/checkIfStarted?number=AB 12345
      */
 
-    @RequestMapping("/checkIfStarted")
-    public String checkIfStarted(
+    @RequestMapping(value = "/checkIfStarted", method = GET)
+    public Boolean checkIfStarted(
             @RequestParam("number") String carRegistrationNumber
     ) {
-        Boolean result = parkingImpl.checkIfVehicleStartedParking(carRegistrationNumber.toUpperCase());
-        return Boolean.toString(result);
+        return parkingImpl.checkIfVehicleStartedParking(carRegistrationNumber.toUpperCase());
     }
 
     /**
@@ -106,14 +104,13 @@ public class CarParkController {
      * query example: http://localhost:8080/carpark/stopPark?ticket=0&currency=PLN
      */
 
-    @RequestMapping("/stopPark")
-    public String stopParkTheCar(
+    @RequestMapping(value = "/stopPark", method = GET)
+    public Ticket stopParkTheCar(
             @RequestParam("ticket") int ticketNumber,
             @RequestParam("currency") String acceptedCurrencyString
     ) {
         AcceptedCurrency acceptedCurrency = AcceptedCurrency.valueOf(acceptedCurrencyString);
-        Ticket ticket = parkingImpl.stopPark(ticketNumber, LocalDateTime.now(), acceptedCurrency);
-        return ticket.toString();
+        return parkingImpl.stopPark(ticketNumber, LocalDateTime.now(), acceptedCurrency);
     }
 
 
@@ -126,16 +123,15 @@ public class CarParkController {
      * query example: http://localhost:8080/carpark/getTicketFee?number=0
      * query example: http://localhost:8080/carpark/getTicketFee?number=2
      */
-    @RequestMapping("/getTicketFee")
-    public String calculateFeeForParticularTicket(
+    @RequestMapping(value = "/getTicketFee", method = GET)
+    public BigDecimal calculateFeeForParticularTicket(
             @RequestParam("number") int ticketNumber
     ) {
 
-        BigDecimal noFee = new BigDecimal(0.0);
+        BigDecimal noFee = BigDecimal.ZERO;
         BigDecimal feeValue = Optional.ofNullable(parkingImpl.calculateFee(ticketNumber, LocalDateTime.now()))
                                       .orElse(noFee);
-        //divide by 100 to obtain x.xx PLN
-        return feeValue.divide(CONVERT_FROM_CENT, 2, BigDecimal.ROUND_UP).toString();
+        return feeValue.divide(CONVERT_FROM_CENT, 2, BigDecimal.ROUND_UP);
     }
 
 
@@ -146,25 +142,23 @@ public class CarParkController {
      * @param dayString yyyyMMdd e.g. 20180725
      * @return map of all acceptedCurrency income
      * <p>
-     * query example: http://localhost:8080/carpark/getDailyIncome?day=20180712
+     * query example: http://localhost:8080/carpark/getDailyIncome?day=20180720
      * !!!! IMPORTANT !!!! change the day string to current before use this query example
      */
-    @RequestMapping("/getDailyIncome")
-    public String getDailyIncomeFromCarPark(
+    @RequestMapping(value = "/getDailyIncome", method = GET)
+    public Map<AcceptedCurrency, BigDecimal> getDailyIncomeFromCarPark(
             @RequestParam("day") String dayString
     ) {
 
         Map<AcceptedCurrency, BigDecimal> result = Optional.ofNullable(parkingImpl.getDailyIncomeForSingleDate(dayString))
                                                            .orElse(parkingImpl.prepareEmptyDailyFeeMap());
-        // divide by 100 to obtain x.xx PLN, y.yy EUR ...
-        return fillDailyFeeMapData(result).toString();
+        return divideAllDailyIncomesToGetCentPrecision(result);
     }
 
-    private Map<AcceptedCurrency, BigDecimal> fillDailyFeeMapData(Map<AcceptedCurrency, BigDecimal> bigDecimalMap) {
+    private Map<AcceptedCurrency, BigDecimal> divideAllDailyIncomesToGetCentPrecision(Map<AcceptedCurrency, BigDecimal> bigDecimalMap) {
 
         Map<AcceptedCurrency, BigDecimal> result = parkingImpl.prepareEmptyDailyFeeMap();
 
-        //I cannot to
         for (Map.Entry<AcceptedCurrency, BigDecimal> entry : bigDecimalMap.entrySet()) {
             AcceptedCurrency key = entry.getKey();
             BigDecimal value = entry.getValue();
