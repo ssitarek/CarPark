@@ -3,11 +3,9 @@ spaces.
 
 Your job is to:
 
-1. design the API (REST preferably)
-
-2. create a model
-
-3. implement customer’s user stories
+- design the API (REST preferably)
+- create a model
+- implement customer’s user stories
 
 User stories
 
@@ -19,22 +17,30 @@ parking.
 5. As a parking owner, I want to know how much money was earned during a given day.
 
 Important notes
-The parking rates are:
 
+The parking rates are:
 ```
-Driver type, 1st hour, 2nd hour, 3rd and each next hour
-Regular:     1 PLN,    2 PLN,    1.5x more than hour before
-VIP:         free,     2 PLN,    1.2x more than hour before
+Driver type 1st hour 2nd hour 3rd and each next hour
+Regular: 1 PLN, 2 PLN, 1.5x more than hour before
+VIP: free, 2 PLN, 1.2x more than hour before
 ```
+
 Don’t implement any payment transactions, penalties and so on.
+
 For now, only one currency is accepted but it’s likely to change in the future.Rules
+
 Project should be written in Java, Kotlin, Groovy or Scala.
+
 Project should be built by Maven, Gradle or SBT. You should also prepare bash script
 start.sh that runs it.
+
 You can mock/stub/fake the database.
+
 Concentrate on the good design and the clean code, rather than supplying a fully
 functioning application.
+
 Remember about the tests.
+
 If you will make any additional assumptions, please write them down in a separate file.
 Create an online repository, add a pull request with all your files and send us the link to the
-created pull request. In this way we can review and comment on your code.
+created pull request. In this way we can review and comment on your code
